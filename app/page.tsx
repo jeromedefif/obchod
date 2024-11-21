@@ -11,7 +11,7 @@ const initialProducts = [
     { id: 1, name: "Rot wein", category: "Víno", inStock: true },
     { id: 2, name: "Grüner veltliner EX, suché, jakostní, WALEK, Rakousko", category: "Víno", inStock: true },
     { id: 3, name: "Tračer Exclusive, sl", category: "Nápoje", inStock: true },
-    { id: 4, name: "Jahodové víno", category: "Ovocné víno", inStock: true },
+    { id: 4, name: "Muscat, psl, EX", category: "Víno", inStock: true },
     { id: 5, name: "Dusíková láhev", category: "Dusík", inStock: true },
     { id: 6, name: "PET láhev 1L - čirá", category: "PET", inStock: true },
     { id: 7, name: "PET láhev 1,5L - čirá", category: "PET", inStock: true },
@@ -23,6 +23,12 @@ const initialProducts = [
     { id: 13, name: "Charnay, s", category: "Nápoje", inStock: true },
     { id: 14, name: "Charnay, p", category: "Nápoje", inStock: true },
     { id: 15, name: "Charnay, psl, Exclusive", category: "Nápoje", inStock: true },
+    { id: 16, name: "Tračer, sl, Exclusive", category: "Nápoje", inStock: true },
+    { id: 17, name: "Obstglühwein (Svařák)", category: "Ovocné víno", inStock: true },
+    { id: 18, name: "Rybízové víno", category: "Ovocné víno", inStock: true },
+    { id: 19, name: "Borůvkové víno", category: "Ovocné víno", inStock: true },
+    { id: 20, name: "Višňové víno", category: "Ovocné víno", inStock: true },
+    { id: 21, name: "Ostružinové víno", category: "Ovocné víno", inStock: true },
 ];
 
 export default function Home() {
