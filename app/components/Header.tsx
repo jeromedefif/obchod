@@ -37,7 +37,7 @@ const Header = ({
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center">
-              <h1 className="text-lg font-bold text-gray-900">E-shop</h1>
+              <h1 className="text-lg font-bold text-gray-900">VINARIA s.r.o.</h1>
               <nav className="hidden md:ml-6 md:flex md:space-x-4">
                 <button
                   onClick={() => onViewChange('catalog')}
@@ -48,7 +48,7 @@ const Header = ({
                   }`}
                 >
                   <List className="mr-1.5 h-5 w-5" />
-                  Katalog
+                  Katalog produktů
                 </button>
                 <button
                   onClick={() => onViewChange('order')}
@@ -58,7 +58,7 @@ const Header = ({
                       : 'text-gray-900 hover:bg-gray-100'
                   }`}
                 >
-                  Objednávka
+                  Souhrn objednávky
                 </button>
               </nav>
             </div>
