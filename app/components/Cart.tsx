@@ -3,17 +3,19 @@
 import React from 'react';
 import { X, ShoppingBag, Trash2 } from 'lucide-react';
 
+type Product = {
+    id: number;
+    name: string;
+    category: string;
+    inStock: boolean;
+};
+
 type CartProps = {
     isOpen: boolean;
     onClose: () => void;
     cartItems: {[key: string]: number};
-    products: Array<{
-        id: number;
-        name: string;
-        category: string;
-        inStock: boolean;
-    }>;
-    onRemoveFromCart: (productId: number, volume: number) => void;
+    products: Array<Product>;
+    onRemoveFromCart: (productId: number, volume: string | number) => void;
     onClearCart: () => void;
     onGoToOrder: () => void;
     totalVolume: number;
@@ -35,12 +37,38 @@ const Cart = ({
         return products.find(p => p.id === productId);
     };
 
+    const getItemDisplay = (product: Product, volume: string, count: number) => {
+        if (product.category === 'PET') {
+            return {
+                volumeText: '1x balení',
+                totalText: `${count} balení`
+            };
+        }
+        if (product.category === 'Dusík') {
+            return {
+                volumeText: volume === 'maly' ? 'malý' : 'velký',
+                totalText: `${count}x ${volume === 'maly' ? 'malý' : 'velký'}`
+            };
+        }
+        return {
+            volumeText: `${volume}L`,
+            totalText: `${parseInt(volume as string) * count}L`
+        };
+    };
+
     const itemsCount = Object.values(cartItems).reduce((sum, count) => sum + count, 0);
+
+    // Pomocná funkce pro české skloňování
+    const getItemsText = (count: number) => {
+        if (count === 1) return 'položka';
+        if (count >= 2 && count <= 4) return 'položky';
+        return 'položek';
+    };
 
     return (
         <>
             {/* Overlay */}
-            <div 
+            <div
                 className="fixed inset-0 bg-black bg-opacity-50 transition-opacity z-40"
                 onClick={onClose}
             />
@@ -53,7 +81,7 @@ const Cart = ({
                         <ShoppingBag className="h-6 w-6 text-gray-700 mr-2" />
                         <h2 className="text-lg font-bold text-gray-900">Košík</h2>
                         <span className="ml-2 bg-blue-100 text-blue-800 text-sm font-medium px-2.5 py-0.5 rounded">
-                            {itemsCount} {itemsCount === 1 ? 'položka' : itemsCount >= 2 && itemsCount <= 4 ? 'položky' : 'položek'}
+                            {itemsCount} {getItemsText(itemsCount)}
                         </span>
                     </div>
                     <button
@@ -78,6 +106,8 @@ const Cart = ({
                                 const product = getProductDetails(parseInt(productId));
                                 if (!product) return null;
 
+                                const display = getItemDisplay(product, volume, count);
+
                                 return (
                                     <div key={key} className="flex items-center p-4 bg-white border rounded-lg">
                                         <div className="flex-1">
@@ -85,14 +115,14 @@ const Cart = ({
                                                 {product.name}
                                             </h3>
                                             <p className="text-gray-600">
-                                                {volume}L × {count}
+                                                {display.volumeText} × {count}
                                             </p>
                                             <p className="text-sm text-blue-600 font-medium">
-                                                Celkem: {parseInt(volume) * count}L
+                                                Celkem: {display.totalText}
                                             </p>
                                         </div>
                                         <button
-                                            onClick={() => onRemoveFromCart(parseInt(productId), parseInt(volume))}
+                                            onClick={() => onRemoveFromCart(parseInt(productId), volume)}
                                             className="p-2 hover:bg-gray-100 rounded-full transition-colors"
                                             title="Odebrat položku"
                                         >
@@ -107,11 +137,13 @@ const Cart = ({
 
                 {/* Patička */}
                 <div className="border-t p-4 space-y-4">
-                    <div className="flex justify-between items-center py-2 border-b">
-                        <span className="text-gray-600">Celkový objem:</span>
-                        <span className="text-xl font-bold text-blue-600">{totalVolume}L</span>
-                    </div>
-                    
+                    {totalVolume > 0 && (
+                        <div className="flex justify-between items-center py-2 border-b">
+                            <span className="text-gray-600">Celkový objem nápojů:</span>
+                            <span className="text-xl font-bold text-blue-600">{totalVolume}L</span>
+                        </div>
+                    )}
+
                     <div className="grid gap-2">
                         <button
                             onClick={onGoToOrder}
@@ -120,7 +152,7 @@ const Cart = ({
                         >
                             Přejít k objednávce
                         </button>
-                        
+
                         {Object.keys(cartItems).length > 0 && (
                             <button
                                 onClick={onClearCart}

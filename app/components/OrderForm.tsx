@@ -4,15 +4,17 @@ import React, { useState, useEffect } from 'react';
 import { Package, RotateCcw, Trash2 } from 'lucide-react';
 import OrderConfirmationDialog from './OrderConfirmationDialog';
 
+type Product = {
+    id: number;
+    name: string;
+    category: string;
+    inStock: boolean;
+};
+
 type OrderFormProps = {
     cartItems: {[key: string]: number};
-    products: Array<{
-        id: number;
-        name: string;
-        category: string;
-        inStock: boolean;
-    }>;
-    onRemoveFromCart: (productId: number, volume: number) => void;
+    products: Array<Product>;
+    onRemoveFromCart: (productId: number, volume: string | number) => void;
     onClearCart: () => void;
     totalVolume: number;
 };
@@ -52,6 +54,28 @@ const OrderForm = ({ cartItems, products, onRemoveFromCart, onClearCart, totalVo
             setHasDraft(true);
         }
     }, [formData]);
+
+    const getItemDisplay = (product: Product, volumeKey: string, count: number) => {
+        switch(product.category) {
+            case 'PET':
+                return {
+                    text: `${count}x balení`,
+                    volumeDisplay: `${count}x balení`
+                };
+            case 'Dusík':
+                const size = volumeKey === 'maly' ? 'malý' : 'velký';
+                return {
+                    text: `${count}x ${size}`,
+                    volumeDisplay: `${count}x ${size}`
+                };
+            default:
+                const volume = parseInt(volumeKey);
+                return {
+                    text: `${volume}L × ${count}`,
+                    volumeDisplay: `${volume * count}L`
+                };
+        }
+    };
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
@@ -100,23 +124,19 @@ const OrderForm = ({ cartItems, products, onRemoveFromCart, onClearCart, totalVo
         }
     };
 
-    const getProductDetails = (productId: number) => {
-        return products.find(p => p.id === productId);
-    };
-
     const getOrderSummary = () => {
-        const items = Object.entries(cartItems).map(([key, quantity]) => {
-            const [productId, volume] = key.split('-');
-            const product = products.find(p => p.id === parseInt(productId));
-            return {
-                productName: product?.name || '',
-                volume: parseInt(volume),
-                quantity
-            };
-        });
-
         return {
-            items,
+            items: Object.entries(cartItems).map(([key, quantity]) => {
+                const [productId, volume] = key.split('-');
+                const product = products.find(p => p.id === parseInt(productId));
+                const display = product ? getItemDisplay(product, volume, quantity) : { text: '', volumeDisplay: '' };
+                return {
+                    productName: product?.name || '',
+                    volume: display.text,
+                    quantity,
+                    display: display.volumeDisplay
+                };
+            }),
             totalVolume,
             customer: formData
         };
@@ -147,54 +167,51 @@ const OrderForm = ({ cartItems, products, onRemoveFromCart, onClearCart, totalVo
                 </div>
             )}
 
-            {/* Vylepšený přehled objednávky s výraznějším zobrazením objemů */}
             <div className="bg-white rounded-lg shadow p-6 mb-6">
-    <h2 className="text-xl font-bold text-gray-900 mb-4">Přehled objednávky</h2>
+                <h2 className="text-xl font-bold text-gray-900 mb-4">Přehled objednávky</h2>
 
-    <div className="space-y-4 mb-6">
-        {Object.entries(cartItems).map(([key, count]) => {
-            const [productId, volume] = key.split('-');
-            const product = getProductDetails(parseInt(productId));
-            if (!product) return null;
+                <div className="space-y-4 mb-6">
+                    {Object.entries(cartItems).map(([key, count]) => {
+                        const [productId, volumeKey] = key.split('-');
+                        const product = products.find(p => p.id === parseInt(productId));
+                        if (!product) return null;
 
-            return (
-                <div key={key} className="flex items-center border-b pb-4">
-                    <Package className="h-6 w-6 text-gray-800 mr-3" />
-                    <div className="flex-grow">
-                        <p className="font-semibold text-gray-900">{product.name}</p>
-                        <p className="text-gray-600">
-                            {volume}L × {count}
-                        </p>
-                    </div>
-                    <div className="bg-gray-50 px-3 py-1 rounded-lg mr-4">
-                        <span className="text-gray-900 font-medium">
-                            {parseInt(volume) * count}L
-                        </span>
-                    </div>
-                    <button
-                        onClick={() => onRemoveFromCart(parseInt(productId), parseInt(volume))}
-                        className="p-1 hover:bg-gray-100 rounded-full transition-colors"
-                        title="Odebrat položku"
-                    >
-                        <Trash2 className="w-5 h-5 text-red-500 hover:text-red-600" />
-                    </button>
+                        const display = getItemDisplay(product, volumeKey, count);
+
+                        return (
+                            <div key={key} className="flex items-center border-b pb-4">
+                                <Package className="h-6 w-6 text-gray-800 mr-3" />
+                                <div className="flex-grow">
+                                    <p className="font-semibold text-gray-900">{product.name}</p>
+                                    <p className="text-gray-600">{display.text}</p>
+                                </div>
+                                <div className="text-right text-gray-900 font-medium mr-4">
+                                    {display.volumeDisplay}
+                                </div>
+                                <button
+                                    onClick={() => onRemoveFromCart(parseInt(productId), volumeKey)}
+                                    className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                                    title="Odebrat položku"
+                                >
+                                    <Trash2 className="w-5 h-5 text-red-500 hover:text-red-600" />
+                                </button>
+                            </div>
+                        );
+                    })}
                 </div>
-            );
-        })}
-    </div>
 
-    <div className="border-t pt-4">
-        <div className="flex justify-between items-center">
-            <span className="text-gray-700 font-medium">Celkový objem</span>
-            <div className="text-right">
-                <span className="text-xl font-bold text-green-600">
-                    {totalVolume}L
-                </span>
+                {totalVolume > 0 && (
+                    <div className="border-t pt-4">
+                        <div className="flex justify-between items-center">
+                            <span className="text-gray-700 font-medium">Celkový objem vín a ostatních alkoholických nápojů:</span>
+                            <span className="text-2xl font-bold text-green-600">
+                                {totalVolume}L
+                            </span>
+                        </div>
+                    </div>
+                )}
             </div>
-        </div>
-    </div>
-</div>
-            {/* Formulář zůstává stejný */}
+
             <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow p-6">
                 <h2 className="text-xl font-bold text-gray-900 mb-6">Kontaktní údaje</h2>
 

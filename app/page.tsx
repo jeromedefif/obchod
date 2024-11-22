@@ -96,10 +96,19 @@ export default function Home() {
 
   const getTotalVolume = () => {
     return Object.entries(cartItems).reduce((total, [key, count]) => {
-      const volume = parseInt(key.split('-')[1]);
-      return total + (volume * count);
+        const [productId, volumeStr] = key.split('-');
+        const product = products.find(p => p.id === parseInt(productId));
+
+        // Pokud je produkt v kategorii PET nebo Dusík, nepřičítáme k objemu
+        if (product && (product.category === 'PET' || product.category === 'Dusík')) {
+            return total;
+        }
+
+        // Pro ostatní kategorie přičítáme objem
+        const volume = parseInt(volumeStr);
+        return total + (volume * count);
     }, 0);
-  };
+};
 
   return (
     <div className="min-h-screen bg-gray-50">

@@ -10,8 +10,9 @@ type OrderConfirmationProps = {
     orderData: {
         items: Array<{
             productName: string;
-            volume: number;
+            volume: string;
             quantity: number;
+            display: string;
         }>;
         totalVolume: number;
         customer: {
@@ -76,20 +77,22 @@ const OrderConfirmationDialog = ({
                     </div>
                 </div>
 
-                {/* Shrnutí objednávky */}
+                {/* Objednané položky */}
                 <div className="bg-gray-50 rounded-lg p-4 mb-6">
                     <h3 className="font-semibold text-gray-900 mb-4">Objednané položky:</h3>
                     <div className="space-y-2 mb-4">
                         {orderData.items.map((item, index) => (
                             <div key={index} className="flex justify-between text-gray-700">
                                 <span>{item.productName}</span>
-                                <span>{item.volume}L × {item.quantity}</span>
+                                <span>{item.display}</span>
                             </div>
                         ))}
                     </div>
-                    <div className="border-t pt-2 font-semibold text-gray-900">
-                        Celkový objem: {orderData.totalVolume}L
-                    </div>
+                    {orderData.totalVolume > 0 && (
+                        <div className="border-t pt-2 font-semibold text-gray-900">
+                            Celkový objem nápojů: {orderData.totalVolume}L
+                        </div>
+                    )}
                 </div>
 
                 {/* Kontaktní údaje */}
