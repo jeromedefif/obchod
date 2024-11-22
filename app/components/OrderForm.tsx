@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Package, RotateCcw, Trash2 } from 'lucide-react';
+import { Package, RotateCcw, Trash2, Wine, Grape, Martini, TestTube, Box } from 'lucide-react';
 import OrderConfirmationDialog from './OrderConfirmationDialog';
 
 type Product = {
@@ -40,6 +40,23 @@ const OrderForm = ({ cartItems, products, onRemoveFromCart, onClearCart, totalVo
     const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
     const [orderStatus, setOrderStatus] = useState<'pending' | 'processing' | 'completed' | 'error'>('pending');
     const [hasDraft, setHasDraft] = useState(false);
+
+    const getItemIcon = (category: string) => {
+        switch(category) {
+            case 'Víno':
+                return <Grape className="h-6 w-6 text-gray-800" />;
+            case 'Ovocné víno':
+                return <Wine className="h-6 w-6 text-gray-800" />;
+            case 'Nápoje':
+                return <Martini className="h-6 w-6 text-gray-800" />;
+            case 'Dusík':
+                return <TestTube className="h-6 w-6 text-gray-800" />;
+            case 'PET':
+                return <Box className="h-6 w-6 text-gray-800" />;
+            default:
+                return <Package className="h-6 w-6 text-gray-800" />;
+        }
+    };
 
     useEffect(() => {
         const savedDraft = localStorage.getItem(DRAFT_KEY);
@@ -169,7 +186,7 @@ const OrderForm = ({ cartItems, products, onRemoveFromCart, onClearCart, totalVo
 
             <div className="bg-white rounded-lg shadow p-6 mb-6">
                 <h2 className="text-xl font-bold text-gray-900 mb-4">Přehled objednávky</h2>
-
+                
                 <div className="space-y-4 mb-6">
                     {Object.entries(cartItems).map(([key, count]) => {
                         const [productId, volumeKey] = key.split('-');
@@ -180,8 +197,8 @@ const OrderForm = ({ cartItems, products, onRemoveFromCart, onClearCart, totalVo
 
                         return (
                             <div key={key} className="flex items-center border-b pb-4">
-                                <Package className="h-6 w-6 text-gray-800 mr-3" />
-                                <div className="flex-grow">
+                                {getItemIcon(product.category)}
+                                <div className="flex-grow ml-3">
                                     <p className="font-semibold text-gray-900">{product.name}</p>
                                     <p className="text-gray-600">{display.text}</p>
                                 </div>
@@ -203,8 +220,8 @@ const OrderForm = ({ cartItems, products, onRemoveFromCart, onClearCart, totalVo
                 {totalVolume > 0 && (
                     <div className="border-t pt-4">
                         <div className="flex justify-between items-center">
-                            <span className="text-gray-700 font-medium">Celkový objem vín a ostatních alkoholických nápojů:</span>
-                            <span className="text-2xl font-bold text-green-600">
+                            <span className="text-gray-700 font-medium">Celkový objem nápojů</span>
+                            <span className="text-2xl font-bold text-blue-600">
                                 {totalVolume}L
                             </span>
                         </div>
@@ -214,7 +231,7 @@ const OrderForm = ({ cartItems, products, onRemoveFromCart, onClearCart, totalVo
 
             <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow p-6">
                 <h2 className="text-xl font-bold text-gray-900 mb-6">Kontaktní údaje</h2>
-
+                
                 <div className="space-y-6">
                     <div>
                         <label htmlFor="name" className="block text-sm font-medium text-gray-900 mb-1">
@@ -300,8 +317,8 @@ const OrderForm = ({ cartItems, products, onRemoveFromCart, onClearCart, totalVo
                             disabled={Object.keys(cartItems).length === 0}
                             className="w-full py-3 px-4 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
                         >
-                            {Object.keys(cartItems).length === 0
-                                ? 'Nejdříve přidejte položky do košíku'
+                            {Object.keys(cartItems).length === 0 
+                                ? 'Nejdříve přidejte položky do košíku' 
                                 : 'Odeslat objednávku'
                             }
                         </button>
