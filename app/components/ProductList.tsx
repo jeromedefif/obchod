@@ -1,13 +1,14 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Wine, Package, Grape, TestTube, Box, Martini, ListFilter } from 'lucide-react';
+import { ListFilter, Grape, Wine, Martini, TestTube, Box, Package } from 'lucide-react';
 
 type Product = {
     id: number;
     name: string;
     category: string;
-    inStock: boolean;
+    in_stock: boolean;
+    created_at?: string;
 };
 
 type ProductListProps = {
@@ -39,21 +40,21 @@ const ProductList = ({ onAddToCart, cartItems, products }: ProductListProps) => 
     const [showCartItems, setShowCartItems] = useState(false);
 
     const getProductIcon = (category: string) => {
-        switch(category) {
-            case 'Víno':
-                return <Grape className="h-6 w-6 text-gray-800" />;
-            case 'Ovocné víno':
-                return <Wine className="h-6 w-6 text-gray-800" />;
-            case 'Nápoje':
-                return <Martini className="h-6 w-6 text-gray-800" />;
-            case 'Dusík':
-                return <TestTube className="h-6 w-6 text-gray-800" />;
-            case 'PET':
-                return <Box className="h-6 w-6 text-gray-800" />;
-            default:
-                return <Package className="h-6 w-6 text-gray-800" />;
-        }
-    };
+    switch(category) {
+        case 'Víno':
+            return <Grape className="h-6 w-6 text-gray-800" />;
+        case 'Ovocné víno':
+            return <Wine className="h-6 w-6 text-gray-800" />;
+        case 'Nápoje':
+            return <Martini className="h-6 w-6 text-gray-800" />;
+        case 'Dusík':
+            return <TestTube className="h-6 w-6 text-gray-800" />;
+        case 'PET':
+            return <Box className="h-6 w-6 text-gray-800" />;
+        default:
+            return <Package className="h-6 w-6 text-gray-800" />;
+    }
+};
 
     const getVolumeButtons = (product: Product) => {
         switch(product.category) {
@@ -87,7 +88,6 @@ const ProductList = ({ onAddToCart, cartItems, products }: ProductListProps) => 
                 <h1 className="text-2xl font-bold text-gray-900">Katalog produktů</h1>
 
                 <div className="flex justify-between items-center">
-                    {/* Nové tlačítka kategorií */}
                     <div className="flex space-x-2">
                         {categoryButtons.map((cat) => (
                             <button
@@ -135,11 +135,11 @@ const ProductList = ({ onAddToCart, cartItems, products }: ProductListProps) => 
                             <div className="flex items-center space-x-2">
                                 <h3 className="font-medium text-gray-900">{product.name}</h3>
                                 <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                    product.inStock
+                                    product.in_stock
                                         ? 'bg-green-100 text-green-900'
                                         : 'bg-red-100 text-red-900'
                                 }`}>
-                                    {product.inStock ? "Skladem" : "Není skladem"}
+                                    {product.in_stock ? "Skladem" : "Není skladem"}
                                 </span>
                             </div>
                             <p className="text-sm text-gray-700">
@@ -151,10 +151,10 @@ const ProductList = ({ onAddToCart, cartItems, products }: ProductListProps) => 
                             {getVolumeButtons(product).map(({ label, value }) => (
                                 <div key={`${product.id}-${value}`} className="relative">
                                     <button
-                                        onClick={() => product.inStock && onAddToCart(product.id, value)}
-                                        disabled={!product.inStock}
+                                        onClick={() => product.in_stock && onAddToCart(product.id, value)}
+                                        disabled={!product.in_stock}
                                         className={`w-16 px-2 py-1 text-sm border rounded-lg ${
-                                            product.inStock
+                                            product.in_stock
                                                 ? 'bg-white text-gray-900 border-gray-300 hover:bg-blue-50 active:bg-blue-100'
                                                 : 'opacity-50 cursor-not-allowed text-gray-500'
                                         }`}

@@ -8,7 +8,8 @@ type Product = {
     id: number;
     name: string;
     category: string;
-    inStock: boolean;
+    in_stock: boolean;
+    created_at?: string;
 };
 
 type OrderFormProps = {
@@ -28,6 +29,7 @@ type FormData = {
 };
 
 const DRAFT_KEY = 'orderFormDraft';
+const NON_VOLUME_CATEGORIES = ['PET', 'Dusík'];
 
 const OrderForm = ({ cartItems, products, onRemoveFromCart, onClearCart, totalVolume }: OrderFormProps) => {
     const [formData, setFormData] = useState<FormData>({
@@ -61,14 +63,22 @@ const OrderForm = ({ cartItems, products, onRemoveFromCart, onClearCart, totalVo
     useEffect(() => {
         const savedDraft = localStorage.getItem(DRAFT_KEY);
         if (savedDraft) {
-            setHasDraft(true);
+            try {
+                setHasDraft(true);
+            } catch (error) {
+                console.error('Error loading draft:', error);
+            }
         }
     }, []);
 
     useEffect(() => {
         if (Object.values(formData).some(value => value !== '')) {
-            localStorage.setItem(DRAFT_KEY, JSON.stringify(formData));
-            setHasDraft(true);
+            try {
+                localStorage.setItem(DRAFT_KEY, JSON.stringify(formData));
+                setHasDraft(true);
+            } catch (error) {
+                console.error('Error saving draft:', error);
+            }
         }
     }, [formData]);
 
@@ -77,21 +87,37 @@ const OrderForm = ({ cartItems, products, onRemoveFromCart, onClearCart, totalVo
             case 'PET':
                 return {
                     text: `${count}x balení`,
-                    volumeDisplay: `${count}x balení`
+                    volumeDisplay: `${count}x balení`,
+                    volumeForTotal: 0
                 };
             case 'Dusík':
                 const size = volumeKey === 'maly' ? 'malý' : 'velký';
                 return {
                     text: `${count}x ${size}`,
-                    volumeDisplay: `${count}x ${size}`
+                    volumeDisplay: `${count}x ${size}`,
+                    volumeForTotal: 0
                 };
             default:
                 const volume = parseInt(volumeKey);
                 return {
                     text: `${volume}L × ${count}`,
-                    volumeDisplay: `${volume * count}L`
+                    volumeDisplay: `${volume * count}L`,
+                    volumeForTotal: volume * count
                 };
         }
+    };
+
+    const calculateTotalVolume = () => {
+        return Object.entries(cartItems).reduce((total, [key, count]) => {
+            const [productId, volume] = key.split('-');
+            const product = products.find(p => p.id === parseInt(productId));
+
+            if (!product || NON_VOLUME_CATEGORIES.includes(product.category)) {
+                return total;
+            }
+
+            return total + (parseInt(volume) * count);
+        }, 0);
     };
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -105,7 +131,11 @@ const OrderForm = ({ cartItems, products, onRemoveFromCart, onClearCart, totalVo
     const loadDraft = () => {
         const savedDraft = localStorage.getItem(DRAFT_KEY);
         if (savedDraft) {
-            setFormData(JSON.parse(savedDraft));
+            try {
+                setFormData(JSON.parse(savedDraft));
+            } catch (error) {
+                console.error('Error loading draft:', error);
+            }
         }
     };
 
@@ -142,22 +172,28 @@ const OrderForm = ({ cartItems, products, onRemoveFromCart, onClearCart, totalVo
     };
 
     const getOrderSummary = () => {
+        const items = Object.entries(cartItems).map(([key, quantity]) => {
+            const [productId, volume] = key.split('-');
+            const product = products.find(p => p.id === parseInt(productId));
+            if (!product) return null;
+
+            const display = getItemDisplay(product, volume, quantity);
+            return {
+                productName: product.name,
+                volume: display.text,
+                quantity,
+                display: display.volumeDisplay
+            };
+        }).filter(Boolean);
+
         return {
-            items: Object.entries(cartItems).map(([key, quantity]) => {
-                const [productId, volume] = key.split('-');
-                const product = products.find(p => p.id === parseInt(productId));
-                const display = product ? getItemDisplay(product, volume, quantity) : { text: '', volumeDisplay: '' };
-                return {
-                    productName: product?.name || '',
-                    volume: display.text,
-                    quantity,
-                    display: display.volumeDisplay
-                };
-            }),
-            totalVolume,
+            items,
+            totalVolume: calculateTotalVolume(),
             customer: formData
         };
     };
+
+    const actualTotalVolume = calculateTotalVolume();
 
     return (
         <div className="max-w-4xl mx-auto p-4">
@@ -186,7 +222,7 @@ const OrderForm = ({ cartItems, products, onRemoveFromCart, onClearCart, totalVo
 
             <div className="bg-white rounded-lg shadow p-6 mb-6">
                 <h2 className="text-xl font-bold text-gray-900 mb-4">Přehled objednávky</h2>
-                
+
                 <div className="space-y-4 mb-6">
                     {Object.entries(cartItems).map(([key, count]) => {
                         const [productId, volumeKey] = key.split('-');
@@ -217,12 +253,12 @@ const OrderForm = ({ cartItems, products, onRemoveFromCart, onClearCart, totalVo
                     })}
                 </div>
 
-                {totalVolume > 0 && (
+                {actualTotalVolume > 0 && (
                     <div className="border-t pt-4">
                         <div className="flex justify-between items-center">
-                            <span className="text-gray-700 font-medium">Celkový objem nápojů</span>
+                            <span className="text-gray-700 font-medium">Celkový objem vín a nápojů</span>
                             <span className="text-2xl font-bold text-blue-600">
-                                {totalVolume}L
+                                {actualTotalVolume}L
                             </span>
                         </div>
                     </div>
@@ -231,7 +267,7 @@ const OrderForm = ({ cartItems, products, onRemoveFromCart, onClearCart, totalVo
 
             <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow p-6">
                 <h2 className="text-xl font-bold text-gray-900 mb-6">Kontaktní údaje</h2>
-                
+
                 <div className="space-y-6">
                     <div>
                         <label htmlFor="name" className="block text-sm font-medium text-gray-900 mb-1">
@@ -317,8 +353,8 @@ const OrderForm = ({ cartItems, products, onRemoveFromCart, onClearCart, totalVo
                             disabled={Object.keys(cartItems).length === 0}
                             className="w-full py-3 px-4 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
                         >
-                            {Object.keys(cartItems).length === 0 
-                                ? 'Nejdříve přidejte položky do košíku' 
+                            {Object.keys(cartItems).length === 0
+                                ? 'Nejdříve přidejte položky do košíku'
                                 : 'Odeslat objednávku'
                             }
                         </button>
