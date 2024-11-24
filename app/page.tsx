@@ -1,54 +1,85 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { createClient } from '@supabase/supabase-js';
 import Header from './components/Header';
 import ProductList from './components/ProductList';
 import OrderForm from './components/OrderForm';
 import AdminProducts from './components/AdminProducts';
 import LoginDialog from './components/LoginDialog';
 
-const initialProducts = [
-    { id: 1, name: "Rot wein", category: "Víno", inStock: true },
-    { id: 2, name: "Grüner veltliner EX, suché, jakostní, WALEK, Rakousko", category: "Víno", inStock: true },
-    { id: 3, name: "Tračer Exclusive, sl", category: "Nápoje", inStock: true },
-    { id: 4, name: "Muscat, psl, EX", category: "Víno", inStock: true },
-    { id: 5, name: "Dusíková láhev", category: "Dusík", inStock: true },
-    { id: 6, name: "PET láhev 1L - čirá", category: "PET", inStock: true },
-    { id: 7, name: "PET láhev 1,5L - čirá", category: "PET", inStock: true },
-    { id: 8, name: "PET láhev 2L - čirá", category: "PET", inStock: true },
-    { id: 9, name: "PET láhev 1,5L - zelená", category: "PET", inStock: true },
-    { id: 10, name: "PET láhev 2L - zelená", category: "PET", inStock: true },
-    { id: 11, name: "Vezel, s", category: "Nápoje", inStock: true },
-    { id: 12, name: "Moport, s", category: "Nápoje", inStock: true },
-    { id: 13, name: "Charnay, s", category: "Nápoje", inStock: true },
-    { id: 14, name: "Charnay, p", category: "Nápoje", inStock: true },
-    { id: 15, name: "Charnay, psl, Exclusive", category: "Nápoje", inStock: true },
-    { id: 16, name: "Tračer, sl, Exclusive", category: "Nápoje", inStock: true },
-    { id: 17, name: "Obstglühwein (Svařák)", category: "Ovocné víno", inStock: true },
-    { id: 18, name: "Rybízové víno", category: "Ovocné víno", inStock: true },
-    { id: 19, name: "Borůvkové víno", category: "Ovocné víno", inStock: true },
-    { id: 20, name: "Višňové víno", category: "Ovocné víno", inStock: true },
-    { id: 21, name: "Ostružinové víno", category: "Ovocné víno", inStock: true },
-];
+// Inicializace Supabase klienta
+const supabase = createClient(
+  'https://uhawlwolmyoqcdurhuel.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVoYXdsd29sbXlvcWNkdXJodWVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzIyNzgxMDUsImV4cCI6MjA0Nzg1NDEwNX0.2o5fFfo1q3xMKjD7QfFNYcsWb8zv5peWsbFLtnJQF4Y'
+);
+
+interface Product {
+  id: number;
+  name: string;
+  category: string;
+  in_stock: boolean;
+  created_at?: string;
+}
+
+// Definujeme výchozí hodnoty pro cart
+const defaultCartItems: {[key: string]: number} = {};
 
 export default function Home() {
+  // Inicializujeme všechny stavy s výchozími hodnotami
   const [currentView, setCurrentView] = useState<'catalog' | 'order' | 'admin'>('catalog');
-  const [cartItems, setCartItems] = useState<{[key: string]: number}>({});
-  const [products, setProducts] = useState(initialProducts);
+  const [cartItems, setCartItems] = useState<{[key: string]: number}>(defaultCartItems);
+  const [products, setProducts] = useState<Product[]>([]);
   const [isLoginDialogOpen, setIsLoginDialogOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Načtení produktů
+  const loadProducts = async () => {
+    try {
+      setIsLoading(true);
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .order('name');
+
+      if (error) {
+        throw error;
+      }
+
+      setProducts(data || []);
+    } catch (error) {
+      console.error('Error loading products:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Načtení dat při prvním renderu
+  useEffect(() => {
+    loadProducts();
+  }, []);
 
   // Načtení košíku z localStorage
   useEffect(() => {
-    const savedCart = localStorage.getItem('cart');
-    if (savedCart) {
-      setCartItems(JSON.parse(savedCart));
+    try {
+      const savedCart = localStorage.getItem('cart');
+      if (savedCart) {
+        setCartItems(JSON.parse(savedCart));
+      }
+    } catch (error) {
+      console.error('Error loading cart from localStorage:', error);
+      setCartItems(defaultCartItems);
     }
   }, []);
 
   // Ukládání košíku do localStorage
   useEffect(() => {
-    localStorage.setItem('cart', JSON.stringify(cartItems));
+    try {
+      localStorage.setItem('cart', JSON.stringify(cartItems));
+    } catch (error) {
+      console.error('Error saving cart to localStorage:', error);
+    }
   }, [cartItems]);
 
   const getCartItemsCount = () => {
@@ -84,31 +115,21 @@ export default function Home() {
   const handleRemoveFromCart = (productId: number, volume: number) => {
     setCartItems(prev => {
       const key = `${productId}-${volume}`;
-      const newItems = { ...prev };
-      delete newItems[key];
-      return newItems;
+      const { [key]: _, ...rest } = prev;
+      return rest;
     });
   };
 
   const handleClearCart = () => {
-    setCartItems({});
+    setCartItems(defaultCartItems);
   };
 
   const getTotalVolume = () => {
     return Object.entries(cartItems).reduce((total, [key, count]) => {
-        const [productId, volumeStr] = key.split('-');
-        const product = products.find(p => p.id === parseInt(productId));
-
-        // Pokud je produkt v kategorii PET nebo Dusík, nepřičítáme k objemu
-        if (product && (product.category === 'PET' || product.category === 'Dusík')) {
-            return total;
-        }
-
-        // Pro ostatní kategorie přičítáme objem
-        const volume = parseInt(volumeStr);
-        return total + (volume * count);
+      const volume = parseInt(key.split('-')[1]);
+      return total + (volume * count);
     }, 0);
-};
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -125,36 +146,81 @@ export default function Home() {
       </div>
 
       <main className="container mx-auto px-4 py-6">
-        {currentView === 'catalog' && (
-          <ProductList
-            onAddToCart={handleAddToCart}
-            cartItems={cartItems}
-            products={products}
-          />
-        )}
-        {currentView === 'order' && (
-          <OrderForm
-            cartItems={cartItems}
-            products={products}
-            onRemoveFromCart={handleRemoveFromCart}
-            onClearCart={handleClearCart}
-            totalVolume={getTotalVolume()}
-          />
-        )}
-        {currentView === 'admin' && isAuthenticated && (
-          <AdminProducts
-            products={products}
-            onAddProduct={(product) => {
-              const newId = Math.max(...products.map(p => p.id), 0) + 1;
-              setProducts([...products, { ...product, id: newId }]);
-            }}
-            onUpdateProduct={(product) => {
-              setProducts(products.map(p => p.id === product.id ? product : p));
-            }}
-            onDeleteProduct={(id) => {
-              setProducts(products.filter(p => p.id !== id));
-            }}
-          />
+        {isLoading ? (
+          <div className="flex justify-center items-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          </div>
+        ) : (
+          <>
+            {currentView === 'catalog' && (
+              <ProductList
+                onAddToCart={handleAddToCart}
+                cartItems={cartItems}
+                products={products}
+              />
+            )}
+            {currentView === 'order' && (
+              <OrderForm
+                cartItems={cartItems}
+                products={products}
+                onRemoveFromCart={handleRemoveFromCart}
+                onClearCart={handleClearCart}
+                totalVolume={getTotalVolume()}
+              />
+            )}
+            {currentView === 'admin' && isAuthenticated && (
+              <AdminProducts
+                products={products}
+                onProductsChange={loadProducts}
+                onAddProduct={async (product) => {
+                  const { error } = await supabase
+                    .from('products')
+                    .insert([{ 
+                      name: product.name,
+                      category: product.category,
+                      in_stock: product.inStock
+                    }]);
+                  
+                  if (error) {
+                    console.error('Error adding product:', error);
+                    return;
+                  }
+                  
+                  await loadProducts();
+                }}
+                onUpdateProduct={async (product) => {
+                  const { error } = await supabase
+                    .from('products')
+                    .update({ 
+                      name: product.name,
+                      category: product.category,
+                      in_stock: product.inStock
+                    })
+                    .eq('id', product.id);
+                  
+                  if (error) {
+                    console.error('Error updating product:', error);
+                    return;
+                  }
+                  
+                  await loadProducts();
+                }}
+                onDeleteProduct={async (id) => {
+                  const { error } = await supabase
+                    .from('products')
+                    .delete()
+                    .eq('id', id);
+                  
+                  if (error) {
+                    console.error('Error deleting product:', error);
+                    return;
+                  }
+                  
+                  await loadProducts();
+                }}
+              />
+            )}
+          </>
         )}
       </main>
 
