@@ -9,10 +9,10 @@ import AdminProducts from './components/AdminProducts';
 import LoginDialog from './components/LoginDialog';
 
 // Inicializace Supabase klienta
-const supabase = createClient(
-  'https://uhawlwolmyoqcdurhuel.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVoYXdsd29sbXlvcWNkdXJodWVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzIyNzgxMDUsImV4cCI6MjA0Nzg1NDEwNX0.2o5fFfo1q3xMKjD7QfFNYcsWb8zv5peWsbFLtnJQF4Y'
-);
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 interface Product {
   id: number;
@@ -26,7 +26,6 @@ interface Product {
 const defaultCartItems: {[key: string]: number} = {};
 
 export default function Home() {
-  // Inicializujeme všechny stavy s výchozími hodnotami
   const [currentView, setCurrentView] = useState<'catalog' | 'order' | 'admin'>('catalog');
   const [cartItems, setCartItems] = useState<{[key: string]: number}>(defaultCartItems);
   const [products, setProducts] = useState<Product[]>([]);
@@ -82,10 +81,6 @@ export default function Home() {
     }
   }, [cartItems]);
 
-  const getCartItemsCount = () => {
-    return Object.values(cartItems).reduce((sum, count) => sum + count, 0);
-  };
-
   const handleViewChange = (view: 'catalog' | 'order' | 'admin') => {
     if (view === 'admin' && !isAuthenticated) {
       setIsLoginDialogOpen(true);
@@ -102,7 +97,7 @@ export default function Home() {
     }
   };
 
-  const handleAddToCart = (productId: number, volume: number) => {
+  const handleAddToCart = (productId: number, volume: number | string) => {
     setCartItems(prev => {
       const key = `${productId}-${volume}`;
       return {
@@ -112,11 +107,22 @@ export default function Home() {
     });
   };
 
-  const handleRemoveFromCart = (productId: number, volume: number) => {
+  const handleRemoveFromCart = (productId: number, volume: number | string) => {
     setCartItems(prev => {
       const key = `${productId}-${volume}`;
-      const { [key]: _, ...rest } = prev;
-      return rest;
+      const currentCount = prev[key] || 0;
+
+      // Pokud je to poslední položka, odstraníme celý klíč
+      if (currentCount <= 1) {
+        const { [key]: _, ...rest } = prev;
+        return rest;
+      }
+
+      // Jinak snížíme počet o 1
+      return {
+        ...prev,
+        [key]: currentCount - 1
+      };
     });
   };
 
@@ -126,8 +132,11 @@ export default function Home() {
 
   const getTotalVolume = () => {
     return Object.entries(cartItems).reduce((total, [key, count]) => {
-      const volume = parseInt(key.split('-')[1]);
-      return total + (volume * count);
+      const [_, volume] = key.split('-');
+      if (volume === 'maly' || volume === 'velky' || volume === 'baleni') {
+        return total;
+      }
+      return total + (parseInt(volume as string) * count);
     }, 0);
   };
 
@@ -155,6 +164,7 @@ export default function Home() {
             {currentView === 'catalog' && (
               <ProductList
                 onAddToCart={handleAddToCart}
+                onRemoveFromCart={handleRemoveFromCart}
                 cartItems={cartItems}
                 products={products}
               />
@@ -164,6 +174,7 @@ export default function Home() {
                 cartItems={cartItems}
                 products={products}
                 onRemoveFromCart={handleRemoveFromCart}
+                onAddToCart={handleAddToCart}
                 onClearCart={handleClearCart}
                 totalVolume={getTotalVolume()}
               />
@@ -175,34 +186,34 @@ export default function Home() {
                 onAddProduct={async (product) => {
                   const { error } = await supabase
                     .from('products')
-                    .insert([{ 
+                    .insert([{
                       name: product.name,
                       category: product.category,
                       in_stock: product.inStock
                     }]);
-                  
+
                   if (error) {
                     console.error('Error adding product:', error);
                     return;
                   }
-                  
+
                   await loadProducts();
                 }}
                 onUpdateProduct={async (product) => {
                   const { error } = await supabase
                     .from('products')
-                    .update({ 
+                    .update({
                       name: product.name,
                       category: product.category,
                       in_stock: product.inStock
                     })
                     .eq('id', product.id);
-                  
+
                   if (error) {
                     console.error('Error updating product:', error);
                     return;
                   }
-                  
+
                   await loadProducts();
                 }}
                 onDeleteProduct={async (id) => {
@@ -210,12 +221,12 @@ export default function Home() {
                     .from('products')
                     .delete()
                     .eq('id', id);
-                  
+
                   if (error) {
                     console.error('Error deleting product:', error);
                     return;
                   }
-                  
+
                   await loadProducts();
                 }}
               />

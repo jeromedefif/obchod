@@ -17,6 +17,7 @@ type OrderFormProps = {
     cartItems: {[key: string]: number};
     products: Array<Product>;
     onRemoveFromCart: (productId: number, volume: string | number) => void;
+    onAddToCart: (productId: number, volume: string | number) => void; // Přidána nová prop
     onClearCart: () => void;
     totalVolume: number;
 };
@@ -35,6 +36,7 @@ const OrderForm = ({
     cartItems, 
     products, 
     onRemoveFromCart, 
+    onAddToCart, // Přidána nová prop
     onClearCart, 
     totalVolume 
 }: OrderFormProps) => {
@@ -179,6 +181,7 @@ const OrderForm = ({
                 cartItems={cartItems}
                 products={products}
                 onRemoveFromCart={onRemoveFromCart}
+                onAddToCart={onAddToCart} // Přidána nová prop
                 totalVolume={totalVolume}
             />
 
