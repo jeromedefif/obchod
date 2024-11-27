@@ -1,18 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabase'
 import Header from './components/Header';
 import ProductList from './components/ProductList';
 import OrderForm from './components/OrderForm';
 import AdminProducts from './components/AdminProducts';
 import LoginDialog from './components/LoginDialog';
 
-// Inicializace Supabase klienta
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 interface Product {
   id: number;
