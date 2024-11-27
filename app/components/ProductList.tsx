@@ -159,7 +159,7 @@ const ProductList = ({ onAddToCart, onRemoveFromCart, cartItems, products }: Pro
         <div className="max-w-6xl mx-auto px-4">
             {/* Sticky header section */}
                 <div className="sticky top-16 bg-white z-40 pb-3 pt-3 shadow-sm">
-                    <h1 className="text-lg font-bold text-gray-900 mb-3">Katalog produktů</h1>
+                    <h1 className="text-lg font-bold text-gray-900 mb-3">Katalog vín a nápojů</h1>
 
                     {/* Search bar */}
                     <div className="mb-3">
