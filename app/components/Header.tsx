@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { ShoppingCart, List, Settings } from 'lucide-react';
 import Cart from './Cart';
-import { Product } from '../types';
+import { Product } from '@/types';
 
 type View = 'catalog' | 'order' | 'admin';
 

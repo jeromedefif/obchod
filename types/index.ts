@@ -14,6 +14,28 @@ export interface CartItem {
     quantity: number;
 }
 
+
+// Typy pro košík_Nové
+export interface CartProps {
+    isOpen: boolean;
+    onClose: () => void;
+    cartItems: { [key: string]: number };
+    products: Product[];
+    onRemoveFromCart: (productId: number, volume: string | number) => void;
+    onClearCart: () => void;
+    onGoToOrder: () => void;
+    totalVolume: number;
+}
+
+export interface CartItemDisplay {
+    volumeText: string;
+    totalText: string;
+}
+
+
+
+
+
 // Typy pro objednávky
 export interface OrderData {
     customer: {
