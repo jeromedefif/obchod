@@ -69,13 +69,11 @@ const EditForm: React.FC<EditFormProps> = ({
     const categories: string[] = ["Víno", "Nápoje", "Ovocné víno", "Dusík", "PET"];
 
     // Handler pro změnu inputů
-    const handleInputChange = (e) => {
-    const { name, value, type } = e.target;
-    const newValue = type === 'checkbox' ? (e.target as HTMLInputElement).checked : value;
+    const handleInputChange: EditFormHandlers['handleInputChange'] = (e) => {
+    const { name, value, type } = e.target as HTMLInputElement;
     setFormData(prev => ({
         ...prev,
-        [name]: newValue,
-        in_stock: name === 'inStock' ? newValue : prev.in_stock
+        [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
     }));
 };
 
