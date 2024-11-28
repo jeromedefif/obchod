@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { PlusCircle, Edit2, Trash2, X, Search } from 'lucide-react';
-import { Product } from '../types';
+import { Product } from '@/types';
 
 interface FormData {
     name: string;
