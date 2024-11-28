@@ -28,9 +28,15 @@ export default function Home() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Přidané console.logy pro sledování stavu aplikace
+    console.log('Current view:', currentView);
+    console.log('Is authenticated:', isAuthenticated);
+    console.log('Products:', products);
+
   // Načtení produktů
   const loadProducts = async () => {
     try {
+      console.log('Začínám načítat produkty...');
       setIsLoading(true);
       const { data, error } = await supabase
         .from('products')
@@ -79,6 +85,7 @@ export default function Home() {
   const handleViewChange = (view: 'catalog' | 'order' | 'admin') => {
     if (view === 'admin' && !isAuthenticated) {
       setIsLoginDialogOpen(true);
+      console.log('Opening login dialog');
     } else {
       setCurrentView(view);
     }
@@ -89,6 +96,7 @@ export default function Home() {
       setIsAuthenticated(true);
       setIsLoginDialogOpen(false);
       setCurrentView('admin');
+      console.log('Login successful');
     }
   };
 
