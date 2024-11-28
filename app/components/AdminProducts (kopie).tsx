@@ -2,14 +2,25 @@
 
 import React, { useState } from 'react';
 import { PlusCircle, Edit2, Trash2, X, Search } from 'lucide-react';
-import { Product } from '../types';
 
-interface FormData {
+// Základní rozhraní pro produkt
+interface Product {
+    id: number;
     name: string;
     category: string;
     in_stock: boolean;
+    created_at?: string;
 }
 
+// Rozhraní pro data formuláře
+interface FormData {
+    name: string;
+    category: string;
+    inStock: boolean;
+    in_stock: boolean;
+}
+
+// Props pro EditForm komponentu
 interface EditFormProps {
     product: Product;
     onSave: (formData: FormData) => void;
@@ -17,12 +28,14 @@ interface EditFormProps {
     isLoading: boolean;
 }
 
+// Props pro AddProductForm komponentu
 interface AddProductFormProps {
     onSave: (formData: FormData) => void;
     onCancel: () => void;
     isLoading: boolean;
 }
 
+// Props pro hlavní AdminProducts komponentu
 interface AdminProductsProps {
     products: Product[];
     onProductsChange: () => Promise<void>;
@@ -31,27 +44,38 @@ interface AdminProductsProps {
     onDeleteProduct: (id: number) => Promise<void>;
 }
 
+// Event handlery pro formuláře
+interface EditFormHandlers {
+    handleInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
+    handleSubmit: (e: React.FormEvent) => void;
+}
+
+// Komponenta pro editační formulář
 const EditForm: React.FC<EditFormProps> = ({
     product,
     onSave,
     onCancel,
     isLoading
 }) => {
+    // State pro formulářová data
     const [formData, setFormData] = useState<FormData>({
-        name: product.name,
-        category: product.category,
-        in_stock: product.in_stock
-    });
+    name: product.name,
+    category: product.category,
+    inStock: product.in_stock,
+    in_stock: product.in_stock
+});
 
+    // Dostupné kategorie produktů
     const categories: string[] = ["Víno", "Nápoje", "Ovocné víno", "Dusík", "PET"];
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-        const { name, value, type } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
-        }));
-    };
+    // Handler pro změnu inputů
+    const handleInputChange: EditFormHandlers['handleInputChange'] = (e) => {
+    const { name, value, type } = e.target as HTMLInputElement;
+    setFormData(prev => ({
+        ...prev,
+        [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
+    }));
+};
 
     return (
         <div className="bg-white p-4 rounded-lg shadow-inner border border-blue-100">
@@ -91,14 +115,14 @@ const EditForm: React.FC<EditFormProps> = ({
                 <div className="flex items-center">
                     <input
                         type="checkbox"
-                        id={`in_stock-${product.id}`}
-                        name="in_stock"
-                        checked={formData.in_stock}
+                        id={`inStock-${product.id}`}
+                        name="inStock"
+                        checked={formData.inStock}
                         onChange={handleInputChange}
                         className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                         disabled={isLoading}
                     />
-                    <label htmlFor={`in_stock-${product.id}`} className="ml-2 block text-sm font-medium text-gray-900">
+                    <label htmlFor={`inStock-${product.id}`} className="ml-2 block text-sm font-medium text-gray-900">
                         Skladem
                     </label>
                 </div>
@@ -126,6 +150,7 @@ const EditForm: React.FC<EditFormProps> = ({
     );
 };
 
+// Komponenta pro přidání nového produktu
 const AddProductForm: React.FC<AddProductFormProps> = ({
     onSave,
     onCancel,
@@ -134,12 +159,12 @@ const AddProductForm: React.FC<AddProductFormProps> = ({
     const [formData, setFormData] = useState<FormData>({
         name: '',
         category: 'Víno',
-        in_stock: true
+        inStock: true
     });
 
     const categories: string[] = ["Víno", "Nápoje", "Ovocné víno", "Dusík", "PET"];
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const handleInputChange: EditFormHandlers['handleInputChange'] = (e) => {
         const { name, value, type } = e.target;
         setFormData(prev => ({
             ...prev,
@@ -188,8 +213,8 @@ const AddProductForm: React.FC<AddProductFormProps> = ({
                     <input
                         type="checkbox"
                         id="newProductInStock"
-                        name="in_stock"
-                        checked={formData.in_stock}
+                        name="inStock"
+                        checked={formData.inStock}
                         onChange={handleInputChange}
                         className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                         disabled={isLoading}
@@ -221,6 +246,7 @@ const AddProductForm: React.FC<AddProductFormProps> = ({
     );
 };
 
+// Hlavní komponenta AdminProducts
 const AdminProducts: React.FC<AdminProductsProps> = ({
     products,
     onProductsChange,
@@ -228,11 +254,13 @@ const AdminProducts: React.FC<AdminProductsProps> = ({
     onUpdateProduct,
     onDeleteProduct
 }) => {
+    // State management
     const [editingInline, setEditingInline] = useState<number | null>(null);
     const [isAddingNew, setIsAddingNew] = useState<boolean>(false);
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [searchQuery, setSearchQuery] = useState<string>('');
 
+    // Handler pro mazání produktu
     const handleDelete = async (id: number): Promise<void> => {
         if (window.confirm('Opravdu chcete smazat tento produkt?')) {
             setIsLoading(true);
@@ -247,6 +275,7 @@ const AdminProducts: React.FC<AdminProductsProps> = ({
         }
     };
 
+    // Handler pro inline aktualizaci produktu
     const handleInlineUpdate = async (productId: number, formData: FormData): Promise<void> => {
         setIsLoading(true);
         try {
@@ -254,7 +283,7 @@ const AdminProducts: React.FC<AdminProductsProps> = ({
                 id: productId,
                 name: formData.name,
                 category: formData.category,
-                in_stock: formData.in_stock
+                in_stock: formData.inStock
             });
             await onProductsChange();
             setEditingInline(null);
@@ -265,14 +294,11 @@ const AdminProducts: React.FC<AdminProductsProps> = ({
         }
     };
 
+    // Handler pro přidání nového produktu
     const handleAddProduct = async (formData: FormData): Promise<void> => {
         setIsLoading(true);
         try {
-            await onAddProduct({
-                name: formData.name,
-                category: formData.category,
-                in_stock: formData.in_stock
-            });
+            await onAddProduct(formData);
             await onProductsChange();
             setIsAddingNew(false);
         } catch (error) {
@@ -282,6 +308,7 @@ const AdminProducts: React.FC<AdminProductsProps> = ({
         }
     };
 
+    // Filtrování produktů podle vyhledávání
     const filteredProducts = products.filter(product =>
         product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         product.category.toLowerCase().includes(searchQuery.toLowerCase())
@@ -311,6 +338,7 @@ const AdminProducts: React.FC<AdminProductsProps> = ({
                 />
             )}
 
+            {/* Vyhledávací pole */}
             <div className="mb-6">
                 <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -334,8 +362,10 @@ const AdminProducts: React.FC<AdminProductsProps> = ({
                 </div>
             </div>
 
+            {/* Seznam produktů v tabulce */}
             <div className="bg-white rounded-lg shadow overflow-hidden">
                 <table className="min-w-full divide-y divide-gray-200">
+                    {/* Hlavička tabulky */}
                     <thead className="bg-gray-50">
                         <tr>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Název</th>
@@ -345,8 +375,10 @@ const AdminProducts: React.FC<AdminProductsProps> = ({
                         </tr>
                     </thead>
 
+                    {/* Tělo tabulky */}
                     <tbody className="bg-white divide-y divide-gray-200">
                         {filteredProducts.length === 0 ? (
+                            // Zobrazení prázdného stavu, když nejsou nalezeny žádné produkty
                             <tr>
                                 <td colSpan={4} className="px-6 py-8 text-center text-gray-500">
                                     {searchQuery ? (
@@ -366,8 +398,10 @@ const AdminProducts: React.FC<AdminProductsProps> = ({
                                 </td>
                             </tr>
                         ) : (
+                            // Mapování přes filtrované produkty a zobrazení každého řádku
                             filteredProducts.map((product) => (
-                                  <React.Fragment key={product.id}>
+                                <React.Fragment key={product.id}>
+                                    {/* Řádek s informacemi o produktu */}
                                     <tr className={editingInline === product.id ? 'bg-blue-50' : 'hover:bg-gray-50'}>
                                         <td className="px-6 py-4 whitespace-nowrap text-gray-900">{product.name}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-gray-900">{product.category}</td>
@@ -381,6 +415,7 @@ const AdminProducts: React.FC<AdminProductsProps> = ({
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                            {/* Tlačítka pro akce s produktem */}
                                             <button
                                                 onClick={() => setEditingInline(product.id)}
                                                 disabled={isLoading}
@@ -400,6 +435,7 @@ const AdminProducts: React.FC<AdminProductsProps> = ({
                                         </td>
                                     </tr>
 
+                                    {/* Řádek s editačním formulářem, zobrazí se při editaci */}
                                     {editingInline === product.id && (
                                         <tr>
                                             <td colSpan={4} className="px-6 py-4 bg-blue-50">
@@ -421,5 +457,4 @@ const AdminProducts: React.FC<AdminProductsProps> = ({
         </div>
     );
 };
-
 export default AdminProducts;
