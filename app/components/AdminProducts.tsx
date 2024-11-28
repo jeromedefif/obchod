@@ -59,22 +59,25 @@ const EditForm: React.FC<EditFormProps> = ({
 }) => {
     // State pro formulářová data
     const [formData, setFormData] = useState<FormData>({
-        name: product.name,
-        category: product.category,
-        inStock: product.in_stock
-    });
+    name: product.name,
+    category: product.category,
+    inStock: product.in_stock,
+    in_stock: product.in_stock
+});
 
     // Dostupné kategorie produktů
     const categories: string[] = ["Víno", "Nápoje", "Ovocné víno", "Dusík", "PET"];
 
     // Handler pro změnu inputů
-    const handleInputChange: EditFormHandlers['handleInputChange'] = (e) => {
-        const { name, value, type } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
-        }));
-    };
+    const handleInputChange = (e) => {
+    const { name, value, type } = e.target;
+    const newValue = type === 'checkbox' ? (e.target as HTMLInputElement).checked : value;
+    setFormData(prev => ({
+        ...prev,
+        [name]: newValue,
+        in_stock: name === 'inStock' ? newValue : prev.in_stock
+    }));
+};
 
     return (
         <div className="bg-white p-4 rounded-lg shadow-inner border border-blue-100">
