@@ -2,34 +2,31 @@
 
 import React from 'react';
 import { Package, Wine, Grape, Martini, TestTube, Box, Trash2, Plus, Minus } from 'lucide-react';
+import { Product } from '../types';
 
-type Product = {
-    id: number;
-    name: string;
-    category: string;
-    in_stock: boolean;
-    created_at?: string;
-};
-
-type OrderSummaryProps = {
-    cartItems: {[key: string]: number};
-    products: Array<Product>;
+interface OrderSummaryProps {
+    cartItems: { [key: string]: number };
+    products: Product[];
     onRemoveFromCart: (productId: number, volume: string | number) => void;
     onAddToCart: (productId: number, volume: string | number) => void;
     totalVolume: number;
-};
+}
 
-// Definice pořadí kategorií
-const CATEGORY_ORDER = ['Víno', 'Ovocné víno', 'Nápoje', 'Dusík', 'PET'];
+interface CategoryIcon {
+    category: string;
+    icon: JSX.Element;
+}
 
-const OrderSummary = ({ 
-    cartItems, 
-    products, 
-    onRemoveFromCart, 
+const CATEGORY_ORDER: string[] = ['Víno', 'Ovocné víno', 'Nápoje', 'Dusík', 'PET'];
+
+const OrderSummary: React.FC<OrderSummaryProps> = ({
+    cartItems,
+    products,
+    onRemoveFromCart,
     onAddToCart,
-    totalVolume 
-}: OrderSummaryProps) => {
-    const getCategoryIcon = (category: string) => {
+    totalVolume
+}) => {
+    const getCategoryIcon = (category: string): JSX.Element => {
         switch(category) {
             case 'Víno':
                 return <Grape className="h-5 w-5 text-gray-600" />;
@@ -46,25 +43,7 @@ const OrderSummary = ({
         }
     };
 
-    // Seskupit položky podle kategorií
-    const groupedItems = Object.entries(cartItems).reduce((acc, [key, count]) => {
-        const [productId, volume] = key.split('-');
-        const product = products.find(p => p.id === parseInt(productId));
-        if (!product) return acc;
-
-        if (!acc[product.category]) {
-            acc[product.category] = [];
-        }
-        acc[product.category].push({ product, volume, count });
-        return acc;
-    }, {} as Record<string, Array<{ product: Product; volume: string; count: number }>>);
-
-    // Seřazení kategorií podle definovaného pořadí
-    const sortedCategories = Object.keys(groupedItems).sort(
-        (a, b) => CATEGORY_ORDER.indexOf(a) - CATEGORY_ORDER.indexOf(b)
-    );
-
-    const getItemText = (product: Product, volume: string) => {
+    const getItemText = (product: Product, volume: string): string => {
         if (product.category === 'PET') {
             return 'balení';
         }
@@ -74,18 +53,41 @@ const OrderSummary = ({
         return `${volume}L`;
     };
 
-    // Helper pro české skloňování
-    const getItemsCount = (count: number) => {
+    const getItemsCount = (count: number): string => {
         if (count === 1) return 'položka';
         if (count >= 2 && count <= 4) return 'položky';
         return 'položek';
     };
 
-    const handleIncrement = (productId: number, volume: string) => {
+    interface GroupedItems {
+        [category: string]: Array<{
+            product: Product;
+            volume: string;
+            count: number;
+        }>;
+    }
+
+    const groupedItems = Object.entries(cartItems).reduce<GroupedItems>((acc, [key, count]) => {
+        const [productId, volume] = key.split('-');
+        const product = products.find(p => p.id === parseInt(productId));
+        if (!product) return acc;
+
+        if (!acc[product.category]) {
+            acc[product.category] = [];
+        }
+        acc[product.category].push({ product, volume, count });
+        return acc;
+    }, {});
+
+    const sortedCategories = Object.keys(groupedItems).sort(
+        (a, b) => CATEGORY_ORDER.indexOf(a) - CATEGORY_ORDER.indexOf(b)
+    );
+
+    const handleIncrement = (productId: number, volume: string): void => {
         onAddToCart(productId, volume);
     };
 
-    const handleDecrement = (productId: number, volume: string) => {
+    const handleDecrement = (productId: number, volume: string): void => {
         onRemoveFromCart(productId, volume);
     };
 
@@ -102,7 +104,6 @@ const OrderSummary = ({
 
     return (
         <div className="bg-white rounded-lg shadow">
-            {/* Header */}
             <div className="p-4 border-b border-gray-100">
                 <div className="flex items-center justify-between">
                     <h2 className="text-lg font-semibold text-gray-900">Přehled objednávky</h2>
@@ -112,7 +113,6 @@ const OrderSummary = ({
                 </div>
             </div>
 
-            {/* Items list */}
             <div className="p-4">
                 <div className="divide-y divide-gray-100">
                     {sortedCategories.map((category) => (
@@ -123,9 +123,9 @@ const OrderSummary = ({
                             </div>
                             <div className="space-y-1 ml-7">
                                 {groupedItems[category].map(({ product, volume, count }) => (
-                                    <div 
-                                        key={`${product.id}-${volume}`} 
-                                        className="flex items-center justify-between text-sm hover:bg-blue-50 
+                                    <div
+                                        key={`${product.id}-${volume}`}
+                                        className="flex items-center justify-between text-sm hover:bg-blue-50
                                                  p-2 rounded-lg transition-colors group"
                                     >
                                         <div className="flex-1 min-w-0">
@@ -136,8 +136,7 @@ const OrderSummary = ({
                                                 {getItemText(product, volume)}
                                             </span>
                                         </div>
-                                        
-                                        {/* Quantity controls */}
+
                                         <div className="flex items-center space-x-2">
                                             <div className="flex items-center bg-white border rounded-lg">
                                                 <button
@@ -158,10 +157,10 @@ const OrderSummary = ({
                                                     <Plus className="w-4 h-4 text-gray-600" />
                                                 </button>
                                             </div>
-                                            
+
                                             <button
                                                 onClick={() => onRemoveFromCart(product.id, volume)}
-                                                className="p-1 hover:bg-red-100 rounded-lg 
+                                                className="p-1 hover:bg-red-100 rounded-lg
                                                          opacity-0 group-hover:opacity-100 transition-opacity"
                                                 title="Odebrat položku"
                                             >
@@ -176,7 +175,6 @@ const OrderSummary = ({
                 </div>
             </div>
 
-            {/* Footer with total */}
             {totalVolume > 0 && (
                 <div className="border-t border-gray-100 p-4 bg-gray-50 rounded-b-lg">
                     <div className="flex justify-between items-center">

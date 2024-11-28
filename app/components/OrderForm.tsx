@@ -4,54 +4,34 @@ import React, { useState, useEffect } from 'react';
 import { RotateCcw } from 'lucide-react';
 import OrderConfirmationDialog from './OrderConfirmationDialog';
 import OrderSummary from './OrderSummary';
+import { Product, CartItems, CustomerFormData, OrderFormProps } from '../types';
 
-type Product = {
-    id: number;
-    name: string;
-    category: string;
-    in_stock: boolean;
-    created_at?: string;
-};
-
-type OrderFormProps = {
-    cartItems: {[key: string]: number};
-    products: Array<Product>;
-    onRemoveFromCart: (productId: number, volume: string | number) => void;
-    onAddToCart: (productId: number, volume: string | number) => void; // Přidána nová prop
-    onClearCart: () => void;
-    totalVolume: number;
-};
-
-type FormData = {
-    name: string;
-    email: string;
-    phone: string;
-    company: string;
-    note: string;
-};
-
+// Klíč pro ukládání draftu do localStorage
 const DRAFT_KEY = 'orderFormDraft';
 
-const OrderForm = ({ 
-    cartItems, 
-    products, 
-    onRemoveFromCart, 
-    onAddToCart, // Přidána nová prop
-    onClearCart, 
-    totalVolume 
-}: OrderFormProps) => {
-    const [formData, setFormData] = useState<FormData>({
+const OrderForm: React.FC<OrderFormProps> = ({
+    cartItems,
+    products,
+    onRemoveFromCart,
+    onAddToCart,
+    onClearCart,
+    totalVolume
+}) => {
+    // State pro formulářová data
+    const [formData, setFormData] = useState<CustomerFormData>({
         name: '',
         email: '',
         phone: '',
         company: '',
         note: ''
     });
-    const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
-    const [orderStatus, setOrderStatus] = useState<'pending' | 'processing' | 'completed' | 'error'>('pending');
-    const [hasDraft, setHasDraft] = useState(false);
 
-    // Načtení draftu při prvním renderu
+    // State pro dialog a status objednávky
+    const [isConfirmationOpen, setIsConfirmationOpen] = useState<boolean>(false);
+    const [orderStatus, setOrderStatus] = useState<'pending' | 'processing' | 'completed' | 'error'>('pending');
+    const [hasDraft, setHasDraft] = useState<boolean>(false);
+
+    // Efekt pro načtení draftu
     useEffect(() => {
         const savedDraft = localStorage.getItem(DRAFT_KEY);
         if (savedDraft) {
@@ -63,7 +43,7 @@ const OrderForm = ({
         }
     }, []);
 
-    // Ukládání draftu při změnách
+    // Efekt pro ukládání draftu
     useEffect(() => {
         if (Object.values(formData).some(value => value !== '')) {
             try {
@@ -75,7 +55,8 @@ const OrderForm = ({
         }
     }, [formData]);
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    // Handler pro změny v inputech
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>): void => {
         const { name, value } = e.target;
         setFormData(prev => ({
             ...prev,
@@ -83,7 +64,8 @@ const OrderForm = ({
         }));
     };
 
-    const loadDraft = () => {
+    // Handler pro načtení draftu
+    const loadDraft = (): void => {
         const savedDraft = localStorage.getItem(DRAFT_KEY);
         if (savedDraft) {
             try {
@@ -94,7 +76,8 @@ const OrderForm = ({
         }
     };
 
-    const clearDraft = () => {
+    // Handler pro smazání draftu
+    const clearDraft = (): void => {
         localStorage.removeItem(DRAFT_KEY);
         setHasDraft(false);
         setFormData({
@@ -106,14 +89,17 @@ const OrderForm = ({
         });
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    // Handler pro odeslání formuláře
+    const handleSubmit = async (e: React.FormEvent): Promise<void> => {
         e.preventDefault();
         setIsConfirmationOpen(true);
     };
 
-    const handleConfirmOrder = async () => {
+    // Handler pro potvrzení objednávky
+    const handleConfirmOrder = async (): Promise<void> => {
         setOrderStatus('processing');
         try {
+            // Simulace zpracování objednávky
             await new Promise(resolve => setTimeout(resolve, 2000));
             setOrderStatus('completed');
             clearDraft();
@@ -126,6 +112,7 @@ const OrderForm = ({
         }
     };
 
+    // Získání souhrnných dat objednávky
     const getOrderSummary = () => {
         const items = Object.entries(cartItems).map(([key, quantity]) => {
             const [productId, volume] = key.split('-');
@@ -134,9 +121,9 @@ const OrderForm = ({
 
             return {
                 productName: product.name,
-                volume: volume,
+                volume,
                 quantity,
-                display: product.category === 'PET' 
+                display: product.category === 'PET'
                     ? `${quantity}× balení`
                     : product.category === 'Dusík'
                         ? `${quantity}× ${volume === 'maly' ? 'malý' : 'velký'}`
@@ -153,6 +140,7 @@ const OrderForm = ({
 
     return (
         <div className="max-w-4xl mx-auto p-4">
+            {/* Draft notification */}
             {hasDraft && (
                 <div className="mb-6 bg-blue-50 border border-blue-100 rounded-lg p-4 flex items-center justify-between">
                     <div className="flex items-center">
@@ -176,12 +164,12 @@ const OrderForm = ({
                 </div>
             )}
 
-            {/* Order Summary */}
+            {/* Order Summary Component */}
             <OrderSummary
                 cartItems={cartItems}
                 products={products}
                 onRemoveFromCart={onRemoveFromCart}
-                onAddToCart={onAddToCart} // Přidána nová prop
+                onAddToCart={onAddToCart}
                 totalVolume={totalVolume}
             />
 
@@ -189,7 +177,7 @@ const OrderForm = ({
             <form onSubmit={handleSubmit} className="mt-6 bg-white rounded-lg shadow divide-y divide-gray-100">
                 <div className="p-6">
                     <h2 className="text-lg font-semibold text-gray-900 mb-6">Kontaktní údaje</h2>
-                    
+
                     <div className="grid gap-6 md:grid-cols-2">
                         <div>
                             <label htmlFor="name" className="block text-sm font-medium text-gray-700">
@@ -277,8 +265,8 @@ const OrderForm = ({
                         type="submit"
                         disabled={Object.keys(cartItems).length === 0}
                         className="w-full py-3 px-4 bg-blue-600 text-white font-medium rounded-lg
-                                 hover:bg-blue-700 transition-colors disabled:bg-gray-400 
-                                 disabled:cursor-not-allowed"
+                                hover:bg-blue-700 transition-colors disabled:bg-gray-400
+                                disabled:cursor-not-allowed"
                     >
                         {Object.keys(cartItems).length === 0
                             ? 'Nejdříve přidejte položky do košíku'
@@ -288,6 +276,7 @@ const OrderForm = ({
                 </div>
             </form>
 
+            {/* Order Confirmation Dialog */}
             <OrderConfirmationDialog
                 isOpen={isConfirmationOpen}
                 onClose={() => {

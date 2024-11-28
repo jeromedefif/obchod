@@ -2,26 +2,9 @@
 
 import React from 'react';
 import { X, ShoppingBag, Trash2 } from 'lucide-react';
+import { CartProps, Product, CartItemDisplay } from '../types';
 
-type Product = {
-    id: number;
-    name: string;
-    category: string;
-    inStock: boolean;
-};
-
-type CartProps = {
-    isOpen: boolean;
-    onClose: () => void;
-    cartItems: {[key: string]: number};
-    products: Array<Product>;
-    onRemoveFromCart: (productId: number, volume: string | number) => void;
-    onClearCart: () => void;
-    onGoToOrder: () => void;
-    totalVolume: number;
-};
-
-const Cart = ({
+const Cart: React.FC<CartProps> = ({
     isOpen,
     onClose,
     cartItems,
@@ -30,36 +13,43 @@ const Cart = ({
     onClearCart,
     onGoToOrder,
     totalVolume
-}: CartProps) => {
+}) => {
+    // Pokud košík není otevřený, nevykreslujeme nic
     if (!isOpen) return null;
 
-    const getProductDetails = (productId: number) => {
+    // Pomocná funkce pro nalezení produktu podle ID
+    const getProductDetails = (productId: number): Product | undefined => {
         return products.find(p => p.id === productId);
     };
 
-    const getItemDisplay = (product: Product, volume: string, count: number) => {
+    // Pomocná funkce pro formátování zobrazení položky
+    const getItemDisplay = (product: Product, volume: string, count: number): CartItemDisplay['displayText'] => {
+        // Pro PET produkty používáme "balení" místo objemu
         if (product.category === 'PET') {
             return {
                 volumeText: '1x balení',
                 totalText: `${count} balení`
             };
         }
+        // Pro dusík máme speciální formátování
         if (product.category === 'Dusík') {
             return {
                 volumeText: volume === 'maly' ? 'malý' : 'velký',
                 totalText: `${count}x ${volume === 'maly' ? 'malý' : 'velký'}`
             };
         }
+        // Pro ostatní produkty zobrazujeme objem v litrech
         return {
             volumeText: `${volume}L`,
             totalText: `${parseInt(volume as string) * count}L`
         };
     };
 
+    // Získání celkového počtu položek v košíku
     const itemsCount = Object.values(cartItems).reduce((sum, count) => sum + count, 0);
 
     // Pomocná funkce pro české skloňování
-    const getItemsText = (count: number) => {
+    const getItemsText = (count: number): string => {
         if (count === 1) return 'položka';
         if (count >= 2 && count <= 4) return 'položky';
         return 'položek';
@@ -67,15 +57,15 @@ const Cart = ({
 
     return (
         <>
-            {/* Overlay */}
+            {/* Překryvná vrstva pro pozadí */}
             <div
                 className="fixed inset-0 bg-black bg-opacity-50 transition-opacity z-40"
                 onClick={onClose}
             />
 
-            {/* Panel */}
+            {/* Panel košíku */}
             <div className="fixed inset-y-0 right-0 max-w-xl w-full bg-white shadow-xl z-50 flex flex-col">
-                {/* Hlavička */}
+                {/* Hlavička košíku */}
                 <div className="p-4 border-b flex justify-between items-center">
                     <div className="flex items-center">
                         <ShoppingBag className="h-6 w-6 text-gray-700 mr-2" />
@@ -92,14 +82,16 @@ const Cart = ({
                     </button>
                 </div>
 
-                {/* Obsah */}
+                {/* Obsah košíku */}
                 <div className="flex-1 overflow-y-auto p-4">
                     {Object.keys(cartItems).length === 0 ? (
+                        // Prázdný košík
                         <div className="text-center text-gray-500 mt-8">
                             <ShoppingBag className="h-12 w-12 mx-auto mb-4 text-gray-400" />
                             <p className="text-lg">Košík je prázdný</p>
                         </div>
                     ) : (
+                        // Seznam položek v košíku
                         <div className="space-y-4">
                             {Object.entries(cartItems).map(([key, count]) => {
                                 const [productId, volume] = key.split('-');
@@ -135,7 +127,7 @@ const Cart = ({
                     )}
                 </div>
 
-                {/* Patička */}
+                {/* Patička košíku */}
                 <div className="border-t p-4 space-y-4">
                     {totalVolume > 0 && (
                         <div className="flex justify-between items-center py-2 border-b">
@@ -148,7 +140,9 @@ const Cart = ({
                         <button
                             onClick={onGoToOrder}
                             disabled={Object.keys(cartItems).length === 0}
-                            className="w-full py-2 px-4 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                            className="w-full py-2 px-4 bg-blue-600 text-white font-medium rounded-lg
+                                     hover:bg-blue-700 transition-colors disabled:bg-gray-400
+                                     disabled:cursor-not-allowed"
                         >
                             Přejít k objednávce
                         </button>
@@ -156,7 +150,8 @@ const Cart = ({
                         {Object.keys(cartItems).length > 0 && (
                             <button
                                 onClick={onClearCart}
-                                className="w-full py-2 px-4 text-red-600 font-medium rounded-lg hover:bg-red-50 transition-colors border border-red-200"
+                                className="w-full py-2 px-4 text-red-600 font-medium rounded-lg
+                                         hover:bg-red-50 transition-colors border border-red-200"
                             >
                                 Vyprázdnit košík
                             </button>

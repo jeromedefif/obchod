@@ -1,21 +1,25 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, FormEvent } from 'react';
 import { X } from 'lucide-react';
 
-type LoginDialogProps = {
+interface LoginDialogProps {
     isOpen: boolean;
     onClose: () => void;
     onLogin: (password: string) => void;
-};
+}
 
-const LoginDialog = ({ isOpen, onClose, onLogin }: LoginDialogProps) => {
-    const [password, setPassword] = useState('');
-    const [error, setError] = useState('');
+const LoginDialog: React.FC<LoginDialogProps> = ({
+    isOpen,
+    onClose,
+    onLogin
+}) => {
+    const [password, setPassword] = useState<string>('');
+    const [error, setError] = useState<string>('');
 
     if (!isOpen) return null;
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = (e: FormEvent<HTMLFormElement>): void => {
         e.preventDefault();
         if (password === 'jeromedefif') {
             onLogin(password);
@@ -37,7 +41,7 @@ const LoginDialog = ({ isOpen, onClose, onLogin }: LoginDialogProps) => {
                 </button>
 
                 <h2 className="text-xl font-bold text-gray-900 mb-4">Přihlášení do správy</h2>
-                
+
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
                         <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">

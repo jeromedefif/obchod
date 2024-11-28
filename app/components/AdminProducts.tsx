@@ -1,16 +1,40 @@
 'use client';
 
 import React, { useState } from 'react';
-import { PlusCircle, Edit2, Trash2, X, Search, Grape, Wine, Martini, TestTube, Box, Package } from 'lucide-react';
+import { PlusCircle, Edit2, Trash2, X, Search } from 'lucide-react';
 
-// Definice typů zůstávají stejné
+// Základní rozhraní pro produkt
 interface Product {
     id: number;
     name: string;
     category: string;
     in_stock: boolean;
+    created_at?: string;
 }
 
+// Rozhraní pro data formuláře
+interface FormData {
+    name: string;
+    category: string;
+    inStock: boolean;
+}
+
+// Props pro EditForm komponentu
+interface EditFormProps {
+    product: Product;
+    onSave: (formData: FormData) => void;
+    onCancel: () => void;
+    isLoading: boolean;
+}
+
+// Props pro AddProductForm komponentu
+interface AddProductFormProps {
+    onSave: (formData: FormData) => void;
+    onCancel: () => void;
+    isLoading: boolean;
+}
+
+// Props pro hlavní AdminProducts komponentu
 interface AdminProductsProps {
     products: Product[];
     onProductsChange: () => Promise<void>;
@@ -19,142 +43,65 @@ interface AdminProductsProps {
     onDeleteProduct: (id: number) => Promise<void>;
 }
 
-// Přidáváme helper funkci pro ikony kategorií - stejnou jako v ProductList
-const getProductIcon = (category: string) => {
-    switch(category) {
-        case 'Víno':
-            return <Grape className="h-5 w-5 text-gray-700" />;
-        case 'Ovocné víno':
-            return <Wine className="h-5 w-5 text-gray-700" />;
-        case 'Nápoje':
-            return <Martini className="h-5 w-5 text-gray-700" />;
-        case 'Dusík':
-            return <TestTube className="h-5 w-5 text-gray-700" />;
-        case 'PET':
-            return <Box className="h-5 w-5 text-gray-700" />;
-        default:
-            return <Package className="h-5 w-5 text-gray-700" />;
-    }
-};
+// Event handlery pro formuláře
+interface EditFormHandlers {
+    handleInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
+    handleSubmit: (e: React.FormEvent) => void;
+}
 
-// Vylepšený editační formulář s kompaktnějším designem
-const EditForm = ({
+// Komponenta pro editační formulář
+const EditForm: React.FC<EditFormProps> = ({
     product,
     onSave,
     onCancel,
     isLoading
-}: {
-    product: Product;
-    onSave: (formData: any) => void;
-    onCancel: () => void;
-    isLoading: boolean;
 }) => {
-    const [formData, setFormData] = useState({
+    // State pro formulářová data
+    const [formData, setFormData] = useState<FormData>({
         name: product.name,
         category: product.category,
         inStock: product.in_stock
     });
 
-    const categories = ["Víno", "Nápoje", "Ovocné víno", "Dusík", "PET"];
+    // Dostupné kategorie produktů
+    const categories: string[] = ["Víno", "Nápoje", "Ovocné víno", "Dusík", "PET"];
+
+    // Handler pro změnu inputů
+    const handleInputChange: EditFormHandlers['handleInputChange'] = (e) => {
+        const { name, value, type } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
+        }));
+    };
 
     return (
-        <div className="bg-blue-50/50 p-3 rounded-lg border border-blue-100">
-            <div className="grid gap-3">
-                <div className="grid grid-cols-2 gap-3">
-                    {/* Název produktu */}
-                    <div>
-                        <input
-                            type="text"
-                            value={formData.name}
-                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                            className="w-full px-3 py-1.5 text-sm border rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                            placeholder="Název produktu"
-                            required
-                        />
-                    </div>
-                    {/* Kategorie */}
-                    <div>
-                        <select
-                            value={formData.category}
-                            onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                            className="w-full px-3 py-1.5 text-sm border rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                        >
-                            {categories.map((category) => (
-                                <option key={category} value={category}>
-                                    {category}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                </div>
-
-                <div className="flex items-center justify-between">
-                    <label className="flex items-center space-x-2 text-sm">
-                        <input
-                            type="checkbox"
-                            checked={formData.inStock}
-                            onChange={(e) => setFormData({ ...formData, inStock: e.target.checked })}
-                            className="rounded text-blue-600 focus:ring-blue-500"
-                        />
-                        <span>Skladem</span>
+        <div className="bg-white p-4 rounded-lg shadow-inner border border-blue-100">
+            <div className="space-y-4">
+                <div>
+                    <label className="block text-sm font-medium text-gray-900 mb-1">
+                        Název produktu
                     </label>
-
-                    <div className="flex gap-2">
-                        <button
-                            type="button"
-                            onClick={onCancel}
-                            className="px-3 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
-                        >
-                            Zrušit
-                        </button>
-                        <button
-                            onClick={() => onSave(formData)}
-                            className="px-3 py-1 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-                            disabled={isLoading}
-                        >
-                            {isLoading ? 'Ukládám...' : 'Uložit'}
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
-};
-
-// Kompaktnější formulář pro přidání nového produktu
-const AddProductForm = ({
-    onSave,
-    onCancel,
-    isLoading
-}: {
-    onSave: (formData: any) => void;
-    onCancel: () => void;
-    isLoading: boolean;
-}) => {
-    const [formData, setFormData] = useState({
-        name: '',
-        category: 'Víno',
-        inStock: true
-    });
-
-    const categories = ["Víno", "Nápoje", "Ovocné víno", "Dusík", "PET"];
-
-    return (
-        <div className="bg-white p-4 rounded-lg border mb-4">
-            <div className="space-y-3">
-                <div className="grid grid-cols-2 gap-3">
                     <input
                         type="text"
+                        name="name"
                         value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        className="px-3 py-1.5 text-sm border rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                        placeholder="Název produktu"
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white text-gray-900"
                         required
+                        disabled={isLoading}
                     />
+                </div>
+                <div>
+                    <label className="block text-sm font-medium text-gray-900 mb-1">
+                        Kategorie
+                    </label>
                     <select
+                        name="category"
                         value={formData.category}
-                        onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                        className="px-3 py-1.5 text-sm border rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white text-gray-900"
+                        disabled={isLoading}
                     >
                         {categories.map((category) => (
                             <option key={category} value={category}>
@@ -163,196 +110,349 @@ const AddProductForm = ({
                         ))}
                     </select>
                 </div>
-
-                <div className="flex items-center justify-between">
-                    <label className="flex items-center space-x-2 text-sm">
-                        <input
-                            type="checkbox"
-                            checked={formData.inStock}
-                            onChange={(e) => setFormData({ ...formData, inStock: e.target.checked })}
-                            className="rounded text-blue-600 focus:ring-blue-500"
-                        />
-                        <span>Skladem</span>
+                <div className="flex items-center">
+                    <input
+                        type="checkbox"
+                        id={`inStock-${product.id}`}
+                        name="inStock"
+                        checked={formData.inStock}
+                        onChange={handleInputChange}
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        disabled={isLoading}
+                    />
+                    <label htmlFor={`inStock-${product.id}`} className="ml-2 block text-sm font-medium text-gray-900">
+                        Skladem
                     </label>
-
-                    <div className="flex gap-2">
-                        <button
-                            onClick={onCancel}
-                            className="px-3 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
-                        >
-                            Zrušit
-                        </button>
-                        <button
-                            onClick={() => onSave(formData)}
-                            className="px-3 py-1 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-                            disabled={isLoading || !formData.name.trim()}
-                        >
-                            Přidat produkt
-                        </button>
-                    </div>
+                </div>
+                <div className="flex justify-end space-x-3 pt-2">
+                    <button
+                        type="button"
+                        onClick={onCancel}
+                        className="px-4 py-2 text-gray-700 border rounded-lg hover:bg-gray-50 transition-colors flex items-center"
+                        disabled={isLoading}
+                    >
+                        <X className="w-4 h-4 mr-1" />
+                        Zrušit
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => onSave(formData)}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-blue-300"
+                        disabled={isLoading}
+                    >
+                        {isLoading ? 'Ukládám...' : 'Uložit změny'}
+                    </button>
                 </div>
             </div>
         </div>
     );
 };
 
-// Hlavní komponenta AdminProducts s novým kompaktním designem
-const AdminProducts = ({
+// Komponenta pro přidání nového produktu
+const AddProductForm: React.FC<AddProductFormProps> = ({
+    onSave,
+    onCancel,
+    isLoading
+}) => {
+    const [formData, setFormData] = useState<FormData>({
+        name: '',
+        category: 'Víno',
+        inStock: true
+    });
+
+    const categories: string[] = ["Víno", "Nápoje", "Ovocné víno", "Dusík", "PET"];
+
+    const handleInputChange: EditFormHandlers['handleInputChange'] = (e) => {
+        const { name, value, type } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
+        }));
+    };
+
+    return (
+        <div className="bg-white p-6 rounded-lg shadow mb-6">
+            <h3 className="text-xl font-semibold text-gray-900 mb-4">Nový produkt</h3>
+            <div className="space-y-4">
+                <div>
+                    <label className="block text-sm font-medium text-gray-900 mb-1">
+                        Název produktu
+                    </label>
+                    <input
+                        type="text"
+                        name="name"
+                        value={formData.name}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white text-gray-900"
+                        required
+                        disabled={isLoading}
+                        placeholder="Zadejte název produktu"
+                    />
+                </div>
+                <div>
+                    <label className="block text-sm font-medium text-gray-900 mb-1">
+                        Kategorie
+                    </label>
+                    <select
+                        name="category"
+                        value={formData.category}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white text-gray-900"
+                        disabled={isLoading}
+                    >
+                        {categories.map((category) => (
+                            <option key={category} value={category}>
+                                {category}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+                <div className="flex items-center">
+                    <input
+                        type="checkbox"
+                        id="newProductInStock"
+                        name="inStock"
+                        checked={formData.inStock}
+                        onChange={handleInputChange}
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        disabled={isLoading}
+                    />
+                    <label htmlFor="newProductInStock" className="ml-2 block text-sm font-medium text-gray-900">
+                        Skladem
+                    </label>
+                </div>
+                <div className="flex justify-end space-x-3 pt-4">
+                    <button
+                        type="button"
+                        onClick={onCancel}
+                        className="px-4 py-2 text-gray-700 border rounded-lg hover:bg-gray-50 transition-colors"
+                        disabled={isLoading}
+                    >
+                        Zrušit
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => onSave(formData)}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-blue-300"
+                        disabled={isLoading || !formData.name.trim()}
+                    >
+                        {isLoading ? 'Ukládám...' : 'Přidat produkt'}
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+// Hlavní komponenta AdminProducts
+const AdminProducts: React.FC<AdminProductsProps> = ({
     products,
     onProductsChange,
     onAddProduct,
     onUpdateProduct,
-    onDeleteProduct,
-}: AdminProductsProps) => {
+    onDeleteProduct
+}) => {
+    // State management
     const [editingInline, setEditingInline] = useState<number | null>(null);
-    const [isAddingNew, setIsAddingNew] = useState(false);
-    const [isLoading, setIsLoading] = useState(false);
-    const [searchQuery, setSearchQuery] = useState('');
+    const [isAddingNew, setIsAddingNew] = useState<boolean>(false);
+    const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [searchQuery, setSearchQuery] = useState<string>('');
 
-    // Filtrování produktů
+    // Handler pro mazání produktu
+    const handleDelete = async (id: number): Promise<void> => {
+        if (window.confirm('Opravdu chcete smazat tento produkt?')) {
+            setIsLoading(true);
+            try {
+                await onDeleteProduct(id);
+                await onProductsChange();
+            } catch (error) {
+                console.error('Error deleting product:', error);
+            } finally {
+                setIsLoading(false);
+            }
+        }
+    };
+
+    // Handler pro inline aktualizaci produktu
+    const handleInlineUpdate = async (productId: number, formData: FormData): Promise<void> => {
+        setIsLoading(true);
+        try {
+            await onUpdateProduct({
+                id: productId,
+                name: formData.name,
+                category: formData.category,
+                in_stock: formData.inStock
+            });
+            await onProductsChange();
+            setEditingInline(null);
+        } catch (error) {
+            console.error('Error updating product:', error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    // Handler pro přidání nového produktu
+    const handleAddProduct = async (formData: FormData): Promise<void> => {
+        setIsLoading(true);
+        try {
+            await onAddProduct(formData);
+            await onProductsChange();
+            setIsAddingNew(false);
+        } catch (error) {
+            console.error('Error adding product:', error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    // Filtrování produktů podle vyhledávání
     const filteredProducts = products.filter(product =>
         product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         product.category.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
-    // Handler funkce zůstávají stejné...
-
     return (
-        <div className="max-w-6xl mx-auto px-4">
-            {/* Hlavička s vyhledáváním a tlačítkem pro přidání */}
-            <div className="sticky top-16 bg-white z-40 pb-3 pt-3 shadow-sm">
-                <div className="flex justify-between items-center mb-3">
-                    <h2 className="text-lg font-bold text-gray-900">Správa produktů</h2>
-                    {!isAddingNew && (
-                        <button
-                            onClick={() => setIsAddingNew(true)}
-                            className="flex items-center px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                        >
-                            <PlusCircle className="w-4 h-4 mr-1.5" />
-                            Přidat produkt
-                        </button>
-                    )}
-                </div>
-
-                {/* Formulář pro přidání nového produktu */}
-                {isAddingNew && (
-                    <AddProductForm
-                        onSave={handleAddProduct}
-                        onCancel={() => setIsAddingNew(false)}
-                        isLoading={isLoading}
-                    />
+        <div className="max-w-4xl mx-auto p-4">
+            <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold text-gray-900">Správa produktů</h2>
+                {!isAddingNew && (
+                    <button
+                        onClick={() => setIsAddingNew(true)}
+                        disabled={isLoading}
+                        className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-blue-300"
+                    >
+                        <PlusCircle className="w-5 h-5 mr-2" />
+                        Přidat produkt
+                    </button>
                 )}
+            </div>
 
-                {/* Vyhledávací pole */}
+            {isAddingNew && (
+                <AddProductForm
+                    onSave={handleAddProduct}
+                    onCancel={() => setIsAddingNew(false)}
+                    isLoading={isLoading}
+                />
+            )}
+
+            {/* Vyhledávací pole */}
+            <div className="mb-6">
                 <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <Search className="h-4 w-4 text-gray-400" />
+                        <Search className="h-5 w-5 text-gray-400" />
                     </div>
                     <input
                         type="text"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         placeholder="Vyhledat produkt..."
-                        className="block w-full pl-9 pr-4 py-1.5 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500"
+                        className="block w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
                     />
                     {searchQuery && (
                         <button
                             onClick={() => setSearchQuery('')}
                             className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
                         >
-                            <X className="h-4 w-4" />
+                            <X className="h-5 w-5" />
                         </button>
                     )}
                 </div>
-                {searchQuery && (
-                    <div className="mt-1 text-xs text-gray-600">
-                        Nalezeno {filteredProducts.length} produktů
-                    </div>
-                )}
             </div>
 
-            {/* Seznam produktů */}
-            <div className="mt-3">
-                <div className="bg-white rounded-lg border">
-                    {filteredProducts.map((product) => (
-                        <React.Fragment key={product.id}>
-                            {editingInline === product.id ? (
-                                <div className="p-2">
-                                    <EditForm
-                                        product={product}
-                                        onSave={(formData) => handleInlineUpdate(product.id, formData)}
-                                        onCancel={() => setEditingInline(null)}
-                                        isLoading={isLoading}
-                                    />
-                                </div>
-                            ) : (
-                                <div className="flex items-center py-1.5 px-3 hover:bg-blue-50/80 transition-all duration-150 border-b last:border-b-0">
-                                    {/* Ikona kategorie */}
-                                    <div className="w-8 flex-shrink-0">
-                                        {getProductIcon(product.category)}
-                                    </div>
+            {/* Seznam produktů v tabulce */}
+            <div className="bg-white rounded-lg shadow overflow-hidden">
+                <table className="min-w-full divide-y divide-gray-200">
+                    {/* Hlavička tabulky */}
+                    <thead className="bg-gray-50">
+                        <tr>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Název</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Kategorie</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Stav</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Akce</th>
+                        </tr>
+                    </thead>
 
-                                    {/* Název a detaily */}
-                                    <div className="flex-grow min-w-0 flex items-center gap-2">
-                                        <div className="max-w-[300px] overflow-hidden truncate" title={product.name}>
-                                            {product.name}
+                    {/* Tělo tabulky */}
+                    <tbody className="bg-white divide-y divide-gray-200">
+                        {filteredProducts.length === 0 ? (
+                            // Zobrazení prázdného stavu, když nejsou nalezeny žádné produkty
+                            <tr>
+                                <td colSpan={4} className="px-6 py-8 text-center text-gray-500">
+                                    {searchQuery ? (
+                                        <div className="flex flex-col items-center">
+                                            <Search className="h-8 w-8 text-gray-400 mb-2" />
+                                            <p>Nenalezeny žádné produkty odpovídající vašemu hledání</p>
+                                            <button
+                                                onClick={() => setSearchQuery('')}
+                                                className="mt-2 text-blue-600 hover:text-blue-800"
+                                            >
+                                                Zobrazit všechny produkty
+                                            </button>
                                         </div>
-                                        <span className="text-xs text-gray-500">
-                                            {product.category}
-                                        </span>
-                                        <span className={`px-1.5 py-0.5 rounded-full text-[11px] leading-none font-medium shrink-0 ${
-                                            product.in_stock
-                                                ? 'bg-green-100 text-green-800'
-                                                : 'bg-red-50 text-red-800'
-                                        }`}>
-                                            {product.in_stock ? 'Skladem' : 'Není skladem'}
-                                        </span>
-                                    </div>
+                                    ) : (
+                                        <p>Zatím nejsou přidány žádné produkty</p>
+                                    )}
+                                </td>
+                            </tr>
+                        ) : (
+                            // Mapování přes filtrované produkty a zobrazení každého řádku
+                            filteredProducts.map((product) => (
+                                <React.Fragment key={product.id}>
+                                    {/* Řádek s informacemi o produktu */}
+                                    <tr className={editingInline === product.id ? 'bg-blue-50' : 'hover:bg-gray-50'}>
+                                        <td className="px-6 py-4 whitespace-nowrap text-gray-900">{product.name}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-gray-900">{product.category}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                                product.in_stock
+                                                    ? 'bg-green-100 text-green-800'
+                                                    : 'bg-red-100 text-red-800'
+                                            }`}>
+                                                {product.in_stock ? "Skladem" : "Není skladem"}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                            {/* Tlačítka pro akce s produktem */}
+                                            <button
+                                                onClick={() => setEditingInline(product.id)}
+                                                disabled={isLoading}
+                                                className="text-blue-600 hover:text-blue-900 mr-3 disabled:text-blue-300"
+                                                title="Upravit"
+                                            >
+                                                <Edit2 className="w-5 h-5" />
+                                            </button>
+                                            <button
+                                                onClick={() => handleDelete(product.id)}
+                                                disabled={isLoading}
+                                                className="text-red-600 hover:text-red-900 disabled:text-red-300"
+                                                title="Smazat"
+                                            >
+                                                <Trash2 className="w-5 h-5" />
+                                            </button>
+                                        </td>
+                                    </tr>
 
-                                    {/* Akční tlačítka */}
-                                    <div className="flex items-center gap-2 ml-4">
-                                        <button
-                                            onClick={() => setEditingInline(product.id)}
-                                            className="p-1 text-blue-600 hover:bg-blue-50 rounded"
-                                            title="Upravit"
-                                        >
-                                            <Edit2 className="w-4 h-4" />
-                                        </button>
-                                        <button
-                                            onClick={() => handleDelete(product.id)}
-                                            className="p-1 text-red-600 hover:bg-red-50 rounded"
-                                            title="Smazat"
-                                        >
-                                            <Trash2 className="w-4 h-4" />
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
-                        </React.Fragment>
-                    ))}
-
-                    {filteredProducts.length === 0 && (
-                        <div className="text-center py-6">
-                            <Search className="h-10 w-10 text-gray-400 mx-auto mb-2" />
-                            <p className="text-gray-600 text-base">
-                                {searchQuery
-                                    ? "Nenalezeny žádné produkty odpovídající vašemu hledání"
-                                    : "Zatím nejsou přidány žádné produkty"}
-                            </p>
-                            {searchQuery && (
-                                <button
-                                    onClick={() => setSearchQuery('')}
-                                    className="mt-2 text-blue-600 hover:text-blue-800 text-sm"
-                                >
-                                    Zobrazit všechny produkty
-                                </button>
-                            )}
-                        </div>
-                    )}
-                </div>
+                                    {/* Řádek s editačním formulářem, zobrazí se při editaci */}
+                                    {editingInline === product.id && (
+                                        <tr>
+                                            <td colSpan={4} className="px-6 py-4 bg-blue-50">
+                                                <EditForm
+                                                    product={product}
+                                                    onSave={(formData) => handleInlineUpdate(product.id, formData)}
+                                                    onCancel={() => setEditingInline(null)}
+                                                    isLoading={isLoading}
+                                                />
+                                            </td>
+                                        </tr>
+                                    )}
+                                </React.Fragment>
+                            ))
+                        )}
+                    </tbody>
+                </table>
             </div>
         </div>
     );
 };
-
 export default AdminProducts;

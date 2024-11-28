@@ -2,42 +2,60 @@
 
 import React from 'react';
 import { X, Check, AlertCircle } from 'lucide-react';
+import { OrderData, OrderStatus } from '../types';
 
-type OrderConfirmationProps = {
+// Definujeme props pro komponentu
+interface OrderConfirmationDialogProps {
     isOpen: boolean;
     onClose: () => void;
     onConfirm: () => void;
-    orderData: {
-        items: Array<{
-            productName: string;
-            volume: string;
-            quantity: number;
-            display: string;
-        }>;
-        totalVolume: number;
-        customer: {
-            name: string;
-            email: string;
-            phone: string;
-            company?: string;
-            note?: string;
-        };
+    orderData: OrderData;
+    orderStatus: OrderStatus;
+}
+
+// Pomocná komponenta pro zobrazení stavového indikátoru
+interface StepIndicatorProps {
+    step: number;
+    currentStatus: OrderStatus;
+    label: string;
+}
+
+const StepIndicator: React.FC<StepIndicatorProps> = ({ step, currentStatus, label }) => {
+    // Pomocná funkce pro určení barvy indikátoru
+    const getStepColor = (): string => {
+        if (currentStatus === 'completed') return 'bg-green-500 text-white';
+        if (currentStatus === 'processing' && step <= 1) return 'bg-blue-500 text-white';
+        if (currentStatus === 'error') return 'bg-red-500 text-white';
+        return 'bg-gray-200';
     };
-    orderStatus: 'pending' | 'processing' | 'completed' | 'error';
+
+    return (
+        <div className="flex flex-col items-center flex-1">
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center mb-2 ${getStepColor()}`}>
+                {step + 1}
+            </div>
+            <span className="text-sm text-gray-600">{label}</span>
+        </div>
+    );
 };
 
-const OrderConfirmationDialog = ({
+const OrderConfirmationDialog: React.FC<OrderConfirmationDialogProps> = ({
     isOpen,
     onClose,
     onConfirm,
     orderData,
     orderStatus
-}: OrderConfirmationProps) => {
+}) => {
+    // Pokud dialog není otevřený, nevykreslujeme nic
     if (!isOpen) return null;
+
+    // Definice kroků v procesu objednávky
+    const steps: string[] = ['Kontrola', 'Zpracování', 'Dokončeno'];
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-6 w-full max-w-2xl relative">
+                {/* Tlačítko pro zavření */}
                 <button
                     onClick={onClose}
                     className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
@@ -48,21 +66,16 @@ const OrderConfirmationDialog = ({
 
                 <h2 className="text-2xl font-bold text-gray-900 mb-6">Potvrzení objednávky</h2>
 
-                {/* Stavový indikátor */}
+                {/* Indikátor průběhu */}
                 <div className="mb-8">
                     <div className="flex justify-between mb-2">
-                        {['Kontrola', 'Zpracování', 'Dokončeno'].map((step, index) => (
-                            <div key={step} className="flex flex-col items-center flex-1">
-                                <div className={`w-8 h-8 rounded-full flex items-center justify-center mb-2 ${
-                                    orderStatus === 'completed' ? 'bg-green-500 text-white' :
-                                    orderStatus === 'processing' && index <= 1 ? 'bg-blue-500 text-white' :
-                                    orderStatus === 'error' ? 'bg-red-500 text-white' :
-                                    'bg-gray-200'
-                                }`}>
-                                    {index + 1}
-                                </div>
-                                <span className="text-sm text-gray-600">{step}</span>
-                            </div>
+                        {steps.map((step, index) => (
+                            <StepIndicator
+                                key={step}
+                                step={index}
+                                currentStatus={orderStatus}
+                                label={step}
+                            />
                         ))}
                     </div>
                     <div className="h-2 bg-gray-200 rounded-full relative">
@@ -77,7 +90,7 @@ const OrderConfirmationDialog = ({
                     </div>
                 </div>
 
-                {/* Objednané položky */}
+                {/* Seznam objednaných položek */}
                 <div className="bg-gray-50 rounded-lg p-4 mb-6">
                     <h3 className="font-semibold text-gray-900 mb-4">Objednané položky:</h3>
                     <div className="space-y-2 mb-4">
@@ -126,7 +139,7 @@ const OrderConfirmationDialog = ({
                     </div>
                 </div>
 
-                {/* Tlačítka */}
+                {/* Stavové zprávy a tlačítka */}
                 {orderStatus === 'error' ? (
                     <div className="flex items-center justify-center p-4 bg-red-50 text-red-700 rounded-lg">
                         <AlertCircle className="w-5 h-5 mr-2" />
