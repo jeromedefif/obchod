@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { X, ShoppingBag, Trash2 } from 'lucide-react';
-import { CartProps, Product, CartItemDisplay } from '../types';
+import { CartProps, Product, CartItemDisplay } from '@/types';
 
 const Cart: React.FC<CartProps> = ({
     isOpen,
