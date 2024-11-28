@@ -17,6 +17,7 @@ interface FormData {
     name: string;
     category: string;
     inStock: boolean;
+    in_stock: boolean;
 }
 
 // Props pro EditForm komponentu
