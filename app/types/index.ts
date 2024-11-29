@@ -1,4 +1,4 @@
-// Product types
+// Základní produktový typ, který reprezentuje položku v katalogu
 export interface Product {
     id: number;
     name: string;
@@ -7,11 +7,11 @@ export interface Product {
     created_at?: string;
 }
 
-// Cart types
+// Typy související s košíkem
 export interface CartProps {
     isOpen: boolean;
     onClose: () => void;
-    cartItems: { [key: string]: number };
+    cartItems: { [key: string]: number };  // Formát: 'productId-volume': quantity
     products: Product[];
     onRemoveFromCart: (productId: number, volume: string | number) => void;
     onClearCart: () => void;
@@ -19,18 +19,20 @@ export interface CartProps {
     totalVolume: number;
 }
 
+// Pomocný typ pro zobrazení položek v košíku
 export interface CartItemDisplay {
-    volumeText: string;
-    totalText: string;
+    volumeText: string;    // Např. "5L" nebo "malý"
+    totalText: string;     // Např. "10L" nebo "2x balení"
 }
 
+// Základní struktura položky v košíku
 export interface CartItem {
     productId: number;
     volume: string | number;
     quantity: number;
 }
 
-// Customer types
+// Typy pro správu zákazníků a jejich údajů
 export interface CustomerData {
     name: string;
     email: string;
@@ -39,12 +41,12 @@ export interface CustomerData {
     note?: string;
 }
 
-// Order types
+// Typy pro správu objednávek
 export interface OrderItem {
     productName: string;
     volume: string | number;
     quantity: number;
-    display: string;
+    display: string;       // Formátovaný text pro zobrazení
 }
 
 export interface OrderData {
@@ -52,9 +54,11 @@ export interface OrderData {
     items: OrderItem[];
     totalVolume: number;
 }
-// Typy pro OrderConfirmationDialog
+
+// Definice možných stavů objednávky pro dialog potvrzení
 export type OrderStatus = 'pending' | 'processing' | 'completed' | 'error';
 
+// Typy pro dialog potvrzení objednávky
 export interface OrderConfirmationDialogProps {
     isOpen: boolean;
     onClose: () => void;
@@ -63,7 +67,13 @@ export interface OrderConfirmationDialogProps {
     orderStatus: OrderStatus;
 }
 
-// Admin types
+export interface StepIndicatorProps {
+    step: number;
+    currentStatus: OrderStatus;
+    label: string;
+}
+
+// Typy pro administrační rozhraní
 export interface AdminProductsProps {
     products: Product[];
     onProductsChange: () => Promise<void>;
@@ -72,6 +82,7 @@ export interface AdminProductsProps {
     onDeleteProduct: (id: number) => Promise<void>;
 }
 
+// Typ pro formulářová data při správě produktů
 export interface FormData {
     name: string;
     category: string;
