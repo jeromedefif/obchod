@@ -1,4 +1,5 @@
-// Základní typy pro produkty
+```typescript
+// Product types
 export interface Product {
     id: number;
     name: string;
@@ -7,15 +8,7 @@ export interface Product {
     created_at?: string;
 }
 
-// Typy pro košík
-export interface CartItem {
-    productId: number;
-    volume: string | number;
-    quantity: number;
-}
-
-
-// Typy pro košík_Nové
+// Cart types
 export interface CartProps {
     isOpen: boolean;
     onClose: () => void;
@@ -32,19 +25,46 @@ export interface CartItemDisplay {
     totalText: string;
 }
 
+export interface CartItem {
+    productId: number;
+    volume: string | number;
+    quantity: number;
+}
 
+// Customer types
+export interface CustomerData {
+    name: string;
+    email: string;
+    phone: string;
+    company?: string;
+    note?: string;
+}
 
+// Order types
+export interface OrderItem {
+    productName: string;
+    volume: string | number;
+    quantity: number;
+    display: string;
+}
 
-
-// Typy pro objednávky
 export interface OrderData {
-    customer: {
-        name: string;
-        email: string;
-        phone: string;
-        company?: string;
-        note?: string;
-    };
-    items: CartItem[];
+    customer: CustomerData;
+    items: OrderItem[];
     totalVolume: number;
+}
+
+// Admin types
+export interface AdminProductsProps {
+    products: Product[];
+    onProductsChange: () => Promise<void>;
+    onAddProduct: (product: Omit<Product, 'id' | 'created_at'>) => Promise<void>;
+    onUpdateProduct: (product: Omit<Product, 'created_at'>) => Promise<void>;
+    onDeleteProduct: (id: number) => Promise<void>;
+}
+
+export interface FormData {
+    name: string;
+    category: string;
+    in_stock: boolean;
 }

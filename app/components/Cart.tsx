@@ -23,28 +23,24 @@ const Cart: React.FC<CartProps> = ({
     };
 
     // Pomocná funkce pro formátování zobrazení položky
-    const getItemDisplay = (product: Product, volume: string, count: number): CartItemDisplay['displayText'] => {
-        // Pro PET produkty používáme "balení" místo objemu
-        if (product.category === 'PET') {
-            return {
-                volumeText: '1x balení',
-                totalText: `${count} balení`
-            };
-        }
-        // Pro dusík máme speciální formátování
-        if (product.category === 'Dusík') {
-            return {
-                volumeText: volume === 'maly' ? 'malý' : 'velký',
-                totalText: `${count}x ${volume === 'maly' ? 'malý' : 'velký'}`
-            };
-        }
-        // Pro ostatní produkty zobrazujeme objem v litrech
+    const getItemDisplay = (product: Product, volume: string, count: number): CartItemDisplay => {
+    if (product.category === 'PET') {
         return {
-            volumeText: `${volume}L`,
-            totalText: `${parseInt(volume as string) * count}L`
+            volumeText: '1x balení',
+            totalText: `${count} balení`
         };
+    }
+    if (product.category === 'Dusík') {
+        return {
+            volumeText: volume === 'maly' ? 'malý' : 'velký',
+            totalText: `${count}x ${volume === 'maly' ? 'malý' : 'velký'}`
+        };
+    }
+    return {
+        volumeText: `${volume}L`,
+        totalText: `${parseInt(volume as string) * count}L`
     };
-
+};
     // Získání celkového počtu položek v košíku
     const itemsCount = Object.values(cartItems).reduce((sum, count) => sum + count, 0);
 
