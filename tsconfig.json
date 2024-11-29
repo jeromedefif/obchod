@@ -1,29 +1,60 @@
 {
- "compilerOptions": {
-   "target": "es5",
-   "lib": ["dom", "dom.iterable", "esnext"],
-   "allowJs": true,
-   "skipLibCheck": true,
-   "strict": true,
-   "noEmit": true,
-   "esModuleInterop": true,
-   "module": "esnext",
-   "moduleResolution": "bundler",
-   "resolveJsonModule": true,
-   "isolatedModules": true,
-   "jsx": "preserve",
-   "incremental": true,
-   "plugins": [
-     {
-       "name": "next"
-     }
-   ],
-   "paths": {
-     "@/*": ["./*"],
-     "@/types": ["./types"],
-     "@/types/*": ["./types/*"]
-   }
- },
- "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
- "exclude": ["node_modules"]
+  "compilerOptions": {
+    // Základní nastavení kompilace
+    "target": "es5",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "module": "esnext",
+    "moduleResolution": "bundler",
+
+    // Striktní TypeScript kontroly
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
+    "strictPropertyInitialization": true,
+    "noImplicitThis": true,
+    "alwaysStrict": true,
+
+    // Next.js specifická nastavení
+    "jsx": "preserve",
+    "incremental": true,
+    "noEmit": true,
+
+    // Podpora pro JavaScript
+    "allowJs": true,
+    "skipLibCheck": true,
+
+    // Podpora pro moduly
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+
+    // Nastavení základní cesty a aliasů
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./app/*"],
+      "@/components/*": ["./app/components/*"],
+      "@/types/*": ["./app/types/*"],
+      "@/lib/*": ["./app/lib/*"]
+    },
+
+    // Next.js plugin
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ]
+  },
+  // Zahrnuté soubory
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    "app/**/*.ts",
+    "app/**/*.tsx"
+  ],
+  // Vyloučené soubory
+  "exclude": ["node_modules"]
 }
