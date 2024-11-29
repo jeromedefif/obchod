@@ -52,6 +52,16 @@ export interface OrderData {
     items: OrderItem[];
     totalVolume: number;
 }
+// Typy pro OrderConfirmationDialog
+export type OrderStatus = 'pending' | 'processing' | 'completed' | 'error';
+
+export interface OrderConfirmationDialogProps {
+    isOpen: boolean;
+    onClose: () => void;
+    onConfirm: () => void;
+    orderData: OrderData;
+    orderStatus: OrderStatus;
+}
 
 // Admin types
 export interface AdminProductsProps {
