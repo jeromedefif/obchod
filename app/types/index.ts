@@ -1,4 +1,3 @@
-```typescript
 // Product types
 export interface Product {
     id: number;
