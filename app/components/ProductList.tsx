@@ -169,6 +169,8 @@ const ProductList = ({ onAddToCart, onRemoveFromCart, cartItems, products }: Pro
                             </div>
                             <input
                                 type="text"
+                                id="searchProduct"
+                                name="searchProduct"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 placeholder="Vyhledat produkt..."
