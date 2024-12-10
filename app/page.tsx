@@ -1,5 +1,9 @@
 import Home from './home';
 
 export default function Page() {
-  return <Home />;
+  return (
+    <div className="min-h-screen">
+      <Home />
+    </div>
+  );
 }

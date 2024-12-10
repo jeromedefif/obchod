@@ -10,7 +10,7 @@ type HeaderProps = {
     id: number;
     name: string;
     category: string;
-    inStock: boolean;
+    in_stock: boolean;
   }>;
   onViewChange: (view: 'catalog' | 'order' | 'admin') => void;
   currentView: 'catalog' | 'order' | 'admin';
